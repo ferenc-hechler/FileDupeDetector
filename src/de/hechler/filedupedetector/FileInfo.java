@@ -201,7 +201,7 @@ public class FileInfo {
 		return sdf.format(new Date(millis));
 	}
 
-	private static long string2date(String date) {
+	private static long string2dateOld(String date) {
 		try {
 			return sdf.parse(date).getTime();
 		} catch (ParseException e) {
@@ -209,7 +209,7 @@ public class FileInfo {
 		}
 	}
 
-	static long string2datePat(String date) {
+	static long string2date(String date) {
 		int y = Integer.parseInt(date.substring(0, 4));
 		int m = Integer.parseInt(date.substring(5, 7));
 		int d = Integer.parseInt(date.substring(8, 10));

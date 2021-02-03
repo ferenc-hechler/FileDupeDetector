@@ -62,7 +62,7 @@ public class Volume {
 	     this.volVSN = vsn;
 	     this.volType = type;
 	     this.volSize = size;
-	     this.root = Paths.get("file:///"+volLetter+":/").getRoot();
+	     this.root = Paths.get(volLetter+":\\").getRoot();
 	}
 	
 

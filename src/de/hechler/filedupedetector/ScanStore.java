@@ -1,10 +1,9 @@
 package de.hechler.filedupedetector;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.function.Consumer;
 
 public class ScanStore {
 
+	private static final String OUTPUT_ENCODING = "UTF-8";
 	private List<BaseFolder> baseFolders;
 
 	public ScanStore() {
@@ -48,9 +48,9 @@ public class ScanStore {
 			write(System.out);
 			return;
 		}
-		try (PrintStream out = new PrintStream(new FileOutputStream(filename))) {
+		try (PrintStream out = new PrintStream(filename, OUTPUT_ENCODING)) {
 			write(out);
-		} catch (FileNotFoundException e) {
+		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -64,7 +64,8 @@ public class ScanStore {
 	}
 	
 	public void read(String filename) {
-		try (BufferedReader in = new BufferedReader(new FileReader(filename))) {
+		
+		try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(filename), OUTPUT_ENCODING))) {
 			String line = in.readLine();
 			while (line != null) {
 				if (!line.isEmpty()) {

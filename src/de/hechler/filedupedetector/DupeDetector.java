@@ -8,10 +8,15 @@ public class DupeDetector {
 //	 private final static String DEFAULT_START_FOLDER = "D:\\BILDER";
 //	 private final static String DEFAULT_START_FOLDER = "D:\\BILDER\\feri";
 //	 private final static String DEFAULT_START_FOLDER = "D:\\BILDER\\ALEXA";
-//	 private final static String DEFAULT_START_FOLDER = "G:\\";
-	 private final static String DEFAULT_START_FOLDER = "G:\\ALTE_BACKUP_HDDs\\PB_Store_and-Save_3500_500GB\\alt\\backup_ferissystem_13.03.2006\\Dokumente und Einstellungen\\feri\\Lokale Einstellungen\\Temporary Internet Files\\Content.IE5\\096RSPQ7";
+//	 private final static String DEFAULT_START_FOLDER = "G:\\ALTE_BACKUP_HDDs\\PB_Store_and-Save_3500_500GB\\alt\\backup_ferissystem_13.03.2006\\Dokumente und Einstellungen\\feri\\Lokale Einstellungen\\Temporary Internet Files\\Content.IE5\\096RSPQ7";
+//	 private final static String DEFAULT_START_FOLDER = "G:\\DTP\\TSG";
+	 private final static String DEFAULT_START_FOLDER = "G:\\";
+//	 private final static String DEFAULT_START_FOLDER = "G:\\CALLIOPE";
+//	 private final static String DEFAULT_START_FOLDER = ".\\out";
+//	private final static String DEFAULT_START_FOLDER = "G:\\test";
+//	 private final static String DEFAULT_START_FOLDER = null;
 	
-	private final static String DEFAULT_OUTPUT_FILE = "out/g_BK3_4T.out";
+	private final static String DEFAULT_OUTPUT_FILE = "out/test.out";
 	
 	
 	public static void main(String[] args) {
@@ -28,29 +33,27 @@ public class DupeDetector {
 				outputFile = args[1];
 			}
 
-			long startTime = System.currentTimeMillis();
 			ScanStore store = new ScanStore();
-			store.scanFolder(startFolder);
-			long delay = System.currentTimeMillis() - startTime;
 
-//			store.scanFolder(".");
-
-//			store.write();
-
-			System.out.println();
-			System.out.println("Time: "+(0.001*delay)+"s");
-
-			int[] cnt = new int[2];
-			store.visitFiles((folder, file) -> cnt[0]++);
-			store.visitFolders(folder -> cnt[1]++);
-			System.out.println("Folders: "+cnt[1]);
-			System.out.println("Files: "+cnt[0]);
-
-			startTime = System.currentTimeMillis();
-			store.write(outputFile);
-			delay = System.currentTimeMillis() - startTime;
-			System.out.println("Time write1: "+(0.001*delay)+"s");
-			
+			long startTime = System.currentTimeMillis();
+			long delay = 0;
+			if (startFolder != null) {
+				store.scanFolder(startFolder);
+				delay = System.currentTimeMillis() - startTime;
+				System.out.println();
+				System.out.println("Time: "+(0.001*delay)+"s");
+	
+				int[] cnt = new int[2];
+				store.visitFiles((folder, file) -> cnt[0]++);
+				store.visitFolders(folder -> cnt[1]++);
+				System.out.println("Folders: "+cnt[1]);
+				System.out.println("Files: "+cnt[0]);
+	
+				startTime = System.currentTimeMillis();
+				store.write(outputFile);
+				delay = System.currentTimeMillis() - startTime;
+				System.out.println("Time write1: "+(0.001*delay)+"s");
+			}			
 			
 			ScanStore store2 = new ScanStore();
 
@@ -58,7 +61,13 @@ public class DupeDetector {
 			store2.read(outputFile);
 			delay = System.currentTimeMillis() - startTime;
 			System.out.println("Time read: "+(0.001*delay)+"s");
-			
+
+			int[] cnt = new int[2];
+			store2.visitFiles((folder, file) -> cnt[0]++);
+			store2.visitFolders(folder -> cnt[1]++);
+			System.out.println("Folders: "+cnt[1]);
+			System.out.println("Files: "+cnt[0]);
+
 			startTime = System.currentTimeMillis();
 			store2.write(outputFile+"2");
 			delay = System.currentTimeMillis() - startTime;

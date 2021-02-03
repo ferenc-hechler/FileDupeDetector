@@ -15,7 +15,7 @@ public class BaseFolder extends Folder {
 		try {
 			File currentFolder = new File(baseFolder);
 			String path = currentFolder.getCanonicalPath();
-			if (path.endsWith(File.separator)) {
+			if (path.endsWith(File.separator) && (path.length()>3)) {
 				path = path.substring(0, path.length()-File.separator.length());
 			}
 			volume = new Volume(path);
@@ -65,10 +65,12 @@ public class BaseFolder extends Folder {
 					throw new RuntimeException("missing tag 'FOLDER '");
 				}
 				String childFolderName = line.replaceFirst("FOLDER ", "");
-				if (!childFolderName.startsWith(baseFolderPath+"\\")) {
-					throw new RuntimeException("unexpected child folder '"+childFolderName+"' of '"+baseFolderPath+"'");
+				if (!baseFolderPath.equals("\\")) {
+					if (!childFolderName.startsWith(baseFolderPath+"\\")) {
+						throw new RuntimeException("unexpected child folder '"+childFolderName+"' of '"+baseFolderPath+"'");
+					}
+					childFolderName = childFolderName.substring(baseFolderPath.length()+1);
 				}
-				childFolderName = childFolderName.substring(baseFolderPath.length()+1);
 				Folder childFolder = new Folder(result, childFolderName);
 				childFolder.readFiles(in);
 				result.childFolders.add(childFolder);

@@ -60,7 +60,14 @@ public class Folder implements FolderIF {
 	
 	@Override
 	public Path getPath() {
+try {
 		return parent.getPath().resolve(foldername);
+}
+catch (Exception e) {
+	System.out.println("PROBLEMS WITH '"+foldername+"'");
+	return parent.getPath().resolve(foldername.replace('?', 'X'));
+}
+		
 	}
 
 	public void write(PrintStream out) {
