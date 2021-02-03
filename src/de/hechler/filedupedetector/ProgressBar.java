@@ -12,8 +12,8 @@ public class ProgressBar {
 	public ProgressBar() {
 		this.cnt = 0;
 		this.estimatedMax = 0;
-		this.cntStepsBeforeTimeCheck = 100;
-		this.displayDelayMillis = 5*1000;
+		this.cntStepsBeforeTimeCheck = 500;
+		this.displayDelayMillis = 60*1000;
 		this.nextTimeCheck = this.cnt + this.cntStepsBeforeTimeCheck;
 		this.nextMessageTime = System.currentTimeMillis() + this.displayDelayMillis;
 	}

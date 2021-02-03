@@ -81,8 +81,9 @@ public class FileInfo {
 				byte[] hash = digest.digest();
 				return bytesToHex(hash);
 			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
+		} catch (Exception e) {
+			System.err.println("ERROR " + e.toString());
+			return "ERROR " + e.toString().replace(Const.COLUMN_SEPERATOR, " ");
 		}
 	}
 
@@ -100,7 +101,8 @@ public class FileInfo {
 				return bytesToHex(hash);
 			}
 		} catch (IOException e) {
-			throw new RuntimeException(e);
+			System.err.println("ERROR " + e.toString());
+			return "ERROR " + e.toString().replace(Const.COLUMN_SEPERATOR, " ");
 		}
 	}
 

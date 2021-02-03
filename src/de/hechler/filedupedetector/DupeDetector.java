@@ -6,11 +6,12 @@ public class DupeDetector {
 //	 private final static String DEFAULT_START_FOLDER = "C:\\BACKUP";
 //	private final static String DEFAULT_START_FOLDER = "C:\\BACKUP\\FerisHandy";
 //	 private final static String DEFAULT_START_FOLDER = "D:\\BILDER";
-	 private final static String DEFAULT_START_FOLDER = "D:\\BILDER\\feri";
+//	 private final static String DEFAULT_START_FOLDER = "D:\\BILDER\\feri";
 //	 private final static String DEFAULT_START_FOLDER = "D:\\BILDER\\ALEXA";
+//	 private final static String DEFAULT_START_FOLDER = "G:\\";
+	 private final static String DEFAULT_START_FOLDER = "G:\\ALTE_BACKUP_HDDs\\PB_Store_and-Save_3500_500GB\\alt\\backup_ferissystem_13.03.2006\\Dokumente und Einstellungen\\feri\\Lokale Einstellungen\\Temporary Internet Files\\Content.IE5\\096RSPQ7";
 	
-	
-	private final static String DEFAULT_OUTPUT_FILE = "out/test.out";
+	private final static String DEFAULT_OUTPUT_FILE = "out/g_BK3_4T.out";
 	
 	
 	public static void main(String[] args) {
@@ -32,9 +33,9 @@ public class DupeDetector {
 			store.scanFolder(startFolder);
 			long delay = System.currentTimeMillis() - startTime;
 
-			store.scanFolder(".");
+//			store.scanFolder(".");
 
-			store.write();
+//			store.write();
 
 			System.out.println();
 			System.out.println("Time: "+(0.001*delay)+"s");
