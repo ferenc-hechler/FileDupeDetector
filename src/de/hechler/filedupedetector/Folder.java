@@ -128,6 +128,7 @@ public class Folder implements FolderIF, GuiInterface {
 		for (FileInfo file:files) {
 			sumInfo.add(file.getSumInfo());
 		}
+		sumInfo.addNumFolders(1);
 		return sumInfo;
 	}
 

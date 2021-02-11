@@ -23,6 +23,12 @@ public class ScanStore implements GuiInterface {
 		this.sumInfo = null;
 	}
 
+	public ScanStore(String scanFolder) {
+		this.baseFolders = new ArrayList<>();
+		this.sumInfo = null;
+		scanFolder(scanFolder);
+	}
+
 	public BaseFolder scanFolder(String scanFolder) {
 		BaseFolder base = new BaseFolder(scanFolder);
 		base.readRecursiveFolderContent();

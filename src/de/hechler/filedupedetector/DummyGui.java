@@ -4,9 +4,9 @@ public class DummyGui {
 	
 	public static void main(String[] args) {
 		ScanStore store = new ScanStore();
-		store.scanFolder("./src");
-		// store.write("./out/store.out");
-		// store.read("./out/store.out");
+		//store.scanFolder("./src");
+		//store.write("./out/store.out");
+		store.read("./out/store.out");
 		showTextGui(store);
 	}
 

@@ -38,5 +38,9 @@ public class SumInfo {
 	public long getDuplicateMemory() {
 		return duplicateMemory;
 	}
+
+	public void addNumFolders(int add) {
+		numFolders += add;
+	}
 	
 }
