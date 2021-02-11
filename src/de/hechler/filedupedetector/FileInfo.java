@@ -23,7 +23,7 @@ public class FileInfo {
 	private final static byte[] buf;
 	private final static MessageDigest digest;
 
-	private static SumProgressBar progress = new SumProgressBar();
+	private static SumProgressBar progress;
 	
 	static {
 		try {
@@ -32,6 +32,10 @@ public class FileInfo {
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
 		}
+			
+		progress = new SumProgressBar();
+		progress.setDisplayDelayMillis(50*1000);
+		progress.setCntStepsBeforeTimeCheck(500);
 	}
 
 	private String filename;

@@ -18,6 +18,44 @@ public class ProgressBar {
 		this.nextMessageTime = System.currentTimeMillis() + this.displayDelayMillis;
 	}
 
+	public long getEstimatedMax() {
+		return estimatedMax;
+	}
+
+	public void setEstimatedMax(long estimatedMax) {
+		this.estimatedMax = estimatedMax;
+	}
+
+	public long getCntStepsBeforeTimeCheck() {
+		return cntStepsBeforeTimeCheck;
+	}
+
+	public void setCntStepsBeforeTimeCheck(long cntStepsBeforeTimeCheck) {
+		this.cntStepsBeforeTimeCheck = cntStepsBeforeTimeCheck;
+		this.nextTimeCheck = this.cnt + this.cntStepsBeforeTimeCheck;
+	}
+
+	public long getDisplayDelayMillis() {
+		return displayDelayMillis;
+	}
+
+	public void setDisplayDelayMillis(long displayDelayMillis) {
+		this.displayDelayMillis = displayDelayMillis;
+		this.nextMessageTime = System.currentTimeMillis() + this.displayDelayMillis;
+	}
+
+	public long getCnt() {
+		return cnt;
+	}
+
+	public long getNextTimeCheck() {
+		return nextTimeCheck;
+	}
+
+	public long getNextMessageTime() {
+		return nextMessageTime;
+	}
+
 	public boolean nextStep() {
 		cnt += 1;
 		if (cnt < nextTimeCheck) {
