@@ -168,7 +168,7 @@ public class FileInfo implements GuiInterface {
 		return qHash;
 	}
 
-	public Path getPath(FolderIF folder) {
+	public Path getPath(Folder folder) {
 		return getPath(folder.getPath());
 	}
 
@@ -230,7 +230,11 @@ public class FileInfo implements GuiInterface {
 
 	@Override
 	public SumInfo getSumInfo() {
-		return new SumInfo(1, 0, filesize, 0);
+		long dupesize = 0;
+		if (QHashManager.getInstance().isDupe(qHash)) {
+			dupesize = filesize;
+		}
+		return new SumInfo(1, 0, filesize, dupesize);
 	}
 
 	@Override

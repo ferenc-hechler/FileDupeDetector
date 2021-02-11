@@ -4,9 +4,9 @@ public class DummyGui {
 	
 	public static void main(String[] args) {
 		ScanStore store = new ScanStore();
-		//store.scanFolder("./src");
+		store.scanFolder("./out/testdir");
 		//store.write("./out/store.out");
-		store.read("./out/store.out");
+		//store.read("./out/store.out");
 		showTextGui(store);
 	}
 
@@ -16,11 +16,11 @@ public class DummyGui {
 
 	private static void showRecursive(String indent, GuiInterface element) {
 		if (element.isFile()) {
-			System.out.println(indent+"FILE "+element.getName()+" "+Utils.readableBytes(element.getSumInfo().getTotalMemory()));
+			System.out.println(indent+"FILE "+element.getName()+" "+Utils.readableBytes(element.getSumInfo().getTotalMemory())+(element.getSumInfo().getDuplicateMemory()!=0?" DUP":""));
 			return;
 		}
 		SumInfo info = element.getSumInfo();
-		System.out.println(indent+"FOLDER "+element.getName()+" "+Utils.readableBytes(info.getTotalMemory())+" (files:"+info.getNumFiles()+")");
+		System.out.println(indent+"FOLDER "+element.getName()+" "+Utils.readableBytes(info.getTotalMemory())+" "+Utils.readableBytes(info.getDuplicateMemory())+" (files:"+info.getNumFiles()+")");
 		for (GuiInterface file:element.getChildFiles()) {
 			showRecursive(indent+"  ", file);
 		}

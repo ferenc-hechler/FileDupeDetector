@@ -7,20 +7,22 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class Folder implements FolderIF, GuiInterface {
+public class Folder implements GuiInterface {
 
 	protected String foldername;
-	private FolderIF parent;
+	private Folder parent;
 	private List<FileInfo> files;
 	protected List<Folder> childFolders;
 	private SumInfo sumInfo;
 	
-	public Folder(FolderIF parent, String foldername) {
+	public Folder(Folder parent, String foldername) {
 		this.parent = parent;
 		this.foldername = foldername;
 		this.files = new ArrayList<>();
@@ -59,9 +61,12 @@ public class Folder implements FolderIF, GuiInterface {
 		}
 	}
 	
-	@Override
 	public Path getPath() {
 		return parent.getPath().resolve(foldername);
+	}
+
+	public Folder getParent() {
+		return parent;
 	}
 
 	public void write(PrintStream out) {
@@ -172,6 +177,32 @@ public class Folder implements FolderIF, GuiInterface {
 	@Override
 	public List<GuiInterface> getChildFiles() {
 		return (List)files;
+	}
+
+	public Folder getCommonParentFolder(Folder otherFolder) {
+		if (otherFolder == null) {
+			return null;
+		}
+		if (otherFolder == this) {
+			return this;
+		}
+		Set<Folder> ownParents = new HashSet<>();
+		Folder searchOwn = getParent();
+		while (searchOwn != null) {
+			if (searchOwn == otherFolder) {
+				return otherFolder;
+			}
+			ownParents.add(searchOwn);
+			searchOwn = searchOwn.getParent();
+		}
+		Folder searchOther = otherFolder.getParent();
+		while (searchOther != null) {
+			if (ownParents.contains(searchOther)) {
+				return searchOther;
+			}
+			searchOther = searchOther.getParent();
+		}
+		return null;
 	}
 
 }
