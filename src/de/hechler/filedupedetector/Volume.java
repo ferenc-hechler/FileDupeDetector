@@ -150,5 +150,9 @@ public class Volume {
 		return root;
 	}
 	
+	@Override
+	public String toString() {
+		return getChangeableInfo();
+	}
 	
 }

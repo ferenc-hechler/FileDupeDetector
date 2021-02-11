@@ -8,26 +8,27 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class Folder implements FolderIF {
+public class Folder implements FolderIF, GuiInterface {
 
 	protected String foldername;
 	private FolderIF parent;
 	private List<FileInfo> files;
 	protected List<Folder> childFolders;
+	private SumInfo sumInfo;
 	
 	public Folder(FolderIF parent, String foldername) {
 		this.parent = parent;
 		this.foldername = foldername;
-		files = null;
-		childFolders = null;
+		this.files = new ArrayList<>();
+		this.childFolders = new ArrayList<>();
+		this.sumInfo = null;
 	}
 
 	public void readFolderContent() {
-		files = new ArrayList<>();
-		childFolders = new ArrayList<>();
 		try (DirectoryStream<Path> ds = Files.newDirectoryStream(getPath())) {
 			for (Path child:ds) {
 				if (Files.isDirectory(child)) {
@@ -60,14 +61,7 @@ public class Folder implements FolderIF {
 	
 	@Override
 	public Path getPath() {
-try {
 		return parent.getPath().resolve(foldername);
-}
-catch (Exception e) {
-	System.out.println("PROBLEMS WITH '"+foldername+"'");
-	return parent.getPath().resolve(foldername.replace('?', 'X'));
-}
-		
 	}
 
 	public void write(PrintStream out) {
@@ -85,8 +79,6 @@ catch (Exception e) {
 	
 	public void readFiles(BufferedReader in) {
 		try {
-			childFolders = new ArrayList<>(); 
-			files = new ArrayList<>();
 			String line = in.readLine();
 			while (!line.isEmpty()) {
 				FileInfo file = FileInfo.read(line);
@@ -116,6 +108,69 @@ catch (Exception e) {
 		for (Folder childFolder:childFolders) {
 			childFolder.visitFolders(visitor);
 		}
+	}
+
+	public Folder findChildFolder(String foldername) {
+		// optimization: use Map for folders with many childfolders.
+		Optional<Folder> result = childFolders.stream().filter(f -> f.foldername.equals(foldername)).findAny();
+		if (result.isPresent()) {
+			return result.get();
+		}
+		return null;
+	}
+	
+
+	public SumInfo calcSumInfoFromChildren() {
+		sumInfo = new SumInfo();
+		for (Folder childFolder:childFolders) {
+			sumInfo.add(childFolder.calcSumInfoFromChildren());
+		}
+		for (FileInfo file:files) {
+			sumInfo.add(file.getSumInfo());
+		}
+		return sumInfo;
+	}
+
+	@Override
+	public String toString() {
+		return foldername;
+	}
+
+	@Override
+	public boolean isFolder() {
+		return true;
+	}
+
+	@Override
+	public boolean isFile() {
+		return false;
+	}
+
+	@Override
+	public String getName() {
+		return foldername;
+	}
+
+	@Override
+	public void refreshSumInfo() {
+		calcSumInfoFromChildren();
+	}
+
+	@Override
+	public SumInfo getSumInfo() {
+		return sumInfo;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public List<GuiInterface> getChildFolders() {
+		return (List)childFolders;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public List<GuiInterface> getChildFiles() {
+		return (List)files;
 	}
 
 }

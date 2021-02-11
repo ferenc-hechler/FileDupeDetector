@@ -10,13 +10,13 @@ public class DupeDetector {
 //	private final static String DEFAULT_START_FOLDER = "D:\\BILDER\\ALEXA";
 //	private final static String DEFAULT_START_FOLDER = "G:\\ALTE_BACKUP_HDDs\\PB_Store_and-Save_3500_500GB\\alt\\backup_ferissystem_13.03.2006\\Dokumente und Einstellungen\\feri\\Lokale Einstellungen\\Temporary Internet Files\\Content.IE5\\096RSPQ7";
 //	private final static String DEFAULT_START_FOLDER = "G:\\DTP\\TSG";
-	private final static String DEFAULT_START_FOLDER = "G:\\";
-//	private final static String DEFAULT_START_FOLDER = "G:\\CALLIOPE";
+//	private final static String DEFAULT_START_FOLDER = "G:\\";
+//	private final static String DEFAULT_START_FOLDER = ".\\out\\testdir";
 //	private final static String DEFAULT_START_FOLDER = ".\\out";
 //	private final static String DEFAULT_START_FOLDER = "G:\\test";
 //	private final static String DEFAULT_START_FOLDER = "H:\\";
 
-//  private final static String DEFAULT_START_FOLDER = null;
+  private final static String DEFAULT_START_FOLDER = null;
 	
 	private final static String DEFAULT_OUTPUT_FILE = "out/new.out";
 //	private final static String DEFAULT_OUTPUT_FILE = "out/SG-BKpl-10TB.out";
@@ -67,11 +67,17 @@ public class DupeDetector {
 			delay = System.currentTimeMillis() - startTime;
 			System.out.println("Time read: "+(0.001*delay)+"s");
 
-			int[] cnt = new int[2];
-			store2.visitFiles((folder, file) -> cnt[0]++);
-			store2.visitFolders(folder -> cnt[1]++);
-			System.out.println("Folders: "+cnt[1]);
-			System.out.println("Files: "+cnt[0]);
+//			int[] cnt = new int[2];
+//			store2.visitFiles((folder, file) -> cnt[0]++);
+//			store2.visitFolders(folder -> cnt[1]++);
+//			System.out.println("Folders: "+cnt[1]);
+//			System.out.println("Files: "+cnt[0]);
+
+			store2.calcSumInfoFromChildren();
+			System.out.println("Folders: "+store2.getSumInfo().getNumFolders());
+			System.out.println("Files: "+store2.getSumInfo().getNumFiles());
+			System.out.println("Memory: "+Utils.readableBytes(store2.getSumInfo().getTotalMemory()));
+			System.out.println("Duplicates: "+Utils.readableBytes(store2.getSumInfo().getDuplicateMemory()));
 
 			startTime = System.currentTimeMillis();
 			store2.write(outputFile+"2");

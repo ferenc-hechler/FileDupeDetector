@@ -71,9 +71,8 @@ public class BaseFolder extends Folder {
 					}
 					childFolderName = childFolderName.substring(baseFolderPath.length()+1);
 				}
-				Folder childFolder = new Folder(result, childFolderName);
+				Folder childFolder = getOrCreateChildFolder(result, childFolderName);
 				childFolder.readFiles(in);
-				result.childFolders.add(childFolder);
 				line = in.readLine();
 			}
 
@@ -81,6 +80,31 @@ public class BaseFolder extends Folder {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static Folder getOrCreateChildFolder(BaseFolder baseFolder, String childFolderName) {
+		String[] segments = childFolderName.split("\\\\");
+		Folder parent = baseFolder;
+		Folder result = baseFolder;
+		for (String segment:segments) {
+			result = getOrCreateDirectChildFolder(parent, segment);
+			parent = result;
+		}
+		return result;
+	}
+
+	private static Folder getOrCreateDirectChildFolder(Folder parent, String segment) {
+		Folder result = parent.findChildFolder(segment);
+		if (result == null) {
+			result = new Folder(parent, segment);
+			parent.childFolders.add(result);
+		}
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return getPath().toString();
 	}
 
 

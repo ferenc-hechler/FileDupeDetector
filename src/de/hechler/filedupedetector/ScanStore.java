@@ -6,17 +6,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class ScanStore {
+public class ScanStore implements GuiInterface {
 
 	private static final String OUTPUT_ENCODING = "UTF-8";
 	private List<BaseFolder> baseFolders;
 
+	private SumInfo sumInfo;
+	
 	public ScanStore() {
 		this.baseFolders = new ArrayList<>();
+		this.sumInfo = null;
 	}
 
 	public BaseFolder scanFolder(String scanFolder) {
@@ -82,6 +86,58 @@ public class ScanStore {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
+	/**
+	 * recalculates number of files/folder/memory/duplicates. 
+	 */
+	public SumInfo calcSumInfoFromChildren() {
+		sumInfo = new SumInfo();
+		for (BaseFolder bf:baseFolders) {
+			sumInfo.add(bf.calcSumInfoFromChildren());
+		}
+		return sumInfo;
+	}
+
+	public List<BaseFolder> getBaseFolders() {
+		return baseFolders;
+	}
+
+	public SumInfo getSumInfo() {
+		if (sumInfo == null) {
+			refreshSumInfo();
+		}
+		return sumInfo;
+	}
+
+	@Override
+	public boolean isFolder() {
+		return true;
+	}
+
+	@Override
+	public boolean isFile() {
+		return false;
+	}
+
+	@Override
+	public String getName() {
+		return "Dieser Computer";
+	}
+
+	@Override
+	public void refreshSumInfo() {
+		calcSumInfoFromChildren();
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	public List<GuiInterface> getChildFolders() {
+		return (List) getBaseFolders();
+	}
+
+	@Override
+	public List<GuiInterface> getChildFiles() {
+		return Collections.emptyList();
+	}
 	
 }
