@@ -10,13 +10,16 @@ public class DupeDetector {
 //	 private final static String DEFAULT_START_FOLDER = "D:\\BILDER\\ALEXA";
 //	 private final static String DEFAULT_START_FOLDER = "G:\\ALTE_BACKUP_HDDs\\PB_Store_and-Save_3500_500GB\\alt\\backup_ferissystem_13.03.2006\\Dokumente und Einstellungen\\feri\\Lokale Einstellungen\\Temporary Internet Files\\Content.IE5\\096RSPQ7";
 //	 private final static String DEFAULT_START_FOLDER = "G:\\DTP\\TSG";
-	 private final static String DEFAULT_START_FOLDER = "G:\\";
+//	 private final static String DEFAULT_START_FOLDER = "G:\\";
 //	 private final static String DEFAULT_START_FOLDER = "G:\\CALLIOPE";
 //	 private final static String DEFAULT_START_FOLDER = ".\\out";
 //	private final static String DEFAULT_START_FOLDER = "G:\\test";
 //	 private final static String DEFAULT_START_FOLDER = null;
+	 private final static String DEFAULT_START_FOLDER = "H:\\";
 	
-	private final static String DEFAULT_OUTPUT_FILE = "out/test.out";
+//	private final static String DEFAULT_OUTPUT_FILE = "out/SG-BKpl-10TB.out";
+	private final static String DEFAULT_OUTPUT_FILE = "out/SG-BKpl-10TB.out";
+	public static boolean CALC_HASH = true;
 	
 	
 	public static void main(String[] args) {

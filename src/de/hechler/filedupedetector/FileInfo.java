@@ -23,7 +23,7 @@ public class FileInfo {
 	private final static byte[] buf;
 	private final static MessageDigest digest;
 
-	private static ProgressBar progress = new ProgressBar();
+	private static SumProgressBar progress = new SumProgressBar();
 	
 	static {
 		try {
@@ -58,11 +58,14 @@ public class FileInfo {
 	}
 
 	public String calcQHash(Path folder) {
-		if (progress.nextStep()) {
-			System.out.println("Files: " + progress.getPercentage()+" current: "+folder+"\\"+filename);
+		if (progress.nextStep(filesize)) {
+			System.out.println("Files: " + progress.getPercentage()+" current: "+folder+"\\"+filename+" ("+readableBytes(progress.getSum())+")");
 		}
 		if (!"-".equals(qHash)) {
 			return qHash;
+		}
+		if (!DupeDetector.CALC_HASH) {
+			return "-";
 		}
 		if (filesize <= 6 * HASH_BLOCK_SIZE) {
 			qHash = calcFullHash(folder);
@@ -70,6 +73,40 @@ public class FileInfo {
 			qHash = calcQuickHash(folder);
 		}
 		return qHash;
+	}
+
+	private final static long KILO = 1024L; 
+	private final static long MEGA = KILO*KILO; 
+	private final static long GIGA = KILO*MEGA; 
+	private final static long TERA = KILO*GIGA; 
+	private final static double  DIV_KILO = 1.0/KILO;
+	private final static double  DIV_MEGA = DIV_KILO/KILO;
+	private final static double  DIV_GIGA = DIV_MEGA/KILO;
+	private final static double  DIV_TERA = DIV_GIGA/KILO;
+	
+	private String readableBytes(long sum) {
+		if (sum < KILO) {
+			return sum+" Bytes";
+		}
+		if (sum < MEGA) {
+			return round1(DIV_KILO*sum)+"KB";
+		}
+		if (sum < GIGA) {
+			return round1(DIV_MEGA*sum)+"MB";
+		}
+		if (sum < TERA) {
+			return round1(DIV_GIGA*sum)+"GB";
+		}
+		return round1(DIV_TERA*sum)+"TB";
+	}
+
+	private String round1(double value) {
+		String result = Double.toString(value);
+		int dotPos = result.indexOf('.');
+		if (dotPos != -1) {
+			result = result.substring(0, dotPos+2);
+		}
+		return result;
 	}
 
 	private String calcFullHash(Path folder) {

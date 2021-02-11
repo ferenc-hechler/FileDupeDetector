@@ -43,7 +43,7 @@ public class Folder implements FolderIF {
 				}
 			}
 		} catch (Exception e) {
-			System.err.println("error reading folder "+getPath()+": "+e.toString());
+			System.err.println("warning: skipping folder "+getPath()+": "+e.toString());
 		}
 	}
 	
