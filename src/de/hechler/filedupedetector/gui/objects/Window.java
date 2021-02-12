@@ -9,11 +9,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 
 import de.hechler.filedupedetector.GuiInterface;
 import de.hechler.filedupedetector.ScanStore;
 import de.hechler.filedupedetector.SumInfo;
+import de.hechler.filedupedetector.Utils;
 
 public class Window extends JFrame {
 	
@@ -44,13 +46,14 @@ public class Window extends JFrame {
 	private MenuButton reload;
 	private MenuButton deleteSelected;
 	private GoInButton[] goIn;
-	private MenuButton goOut;
+	private JButton goOut;
 	private ScanStore scanStore;
 	private List <GuiInterface[]> stack;
 	private GuiInterface[] element;
 	private int index;
 	private List <String> search;
 	private List <String> read;
+	private volatile boolean blocked = false;
 	
 	
 	
@@ -59,7 +62,7 @@ public class Window extends JFrame {
 	
 	public Window load() {
 		scanStore = new ScanStore();
-		element = null;
+		element = new GuiInterface[0];
 		stack = new ArrayList <>();
 		read = new ArrayList <String>();
 		search = new ArrayList <String>();
@@ -75,9 +78,13 @@ public class Window extends JFrame {
 		reload = new MenuButton().load(X_2, Y_1, new ImageIcon("./icons/reload.png"), a -> reload());
 		deleteSelected = new MenuButton().load(X_3, Y_1, new ImageIcon("./icons/delSelect.png"), a -> deleteSelected());
 		table = new Table().load(X_2, Y_2);
-		goOut = new MenuButton().load(X_1, Y_2, new ImageIcon("./icons/goOut.png"), a -> goOut());
 		up = new ScollButton().load(X_4, Y_2, true, this);
 		down = new ScollButton().load(X_4, Y_3, false, this);
+		goOut = new JButton();
+		goOut.setIcon(new ImageIcon("./icons/goOut.png"));
+		goOut.addActionListener(a -> goOut());
+		goOut.setBounds(X_1, Y_2, 50, 15);
+		add(goOut);
 		add(down);
 		add(up);
 		add(table);
@@ -85,10 +92,15 @@ public class Window extends JFrame {
 		add(changeSearchFolderButton);
 		add(reload);
 		
+		goIn = new GoInButton[Table.ELEMENT_CNT];
+		
+		for (int i = 0; i < goIn.length; i ++ ) {
+			goIn[i] = new GoInButton().load(X_1, Y_2 + GoInButton.HEIGHT * (i + 1), this, i);
+			add(goIn[i]);
+		}
+		
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
-		
-		repaint();
 		
 		changeSearchFolder();
 		
@@ -102,16 +114,49 @@ public class Window extends JFrame {
 	}
 	
 	private void rebuildTable() {
+		if (stack.isEmpty()) {
+			goOut.setVisible(false);
+		} else {
+			goOut.setVisible(true);
+		}
+		if (element.length - index > Table.ELEMENT_CNT) {
+			up.setVisible(true);
+		} else {
+			up.setVisible(false);
+		}
+		if (index > 0) {
+			down.setVisible(true);
+		} else {
+			down.setVisible(false);
+		}
 		for (int i = 0; i < Table.ELEMENT_CNT; i ++ ) {
+			if (i + index >= element.length) {
+				for (; i < goIn.length; i ++ ) {
+					goIn[i].setVisible(false);
+				}
+				break;
+			}
 			GuiInterface e = element[i + index];
 			table.setValueAt(e.getName(), Table.NAME, i);
 			SumInfo sum = e.getSumInfo();
+			if (sum == null) {
+				e.refreshSumInfo();
+				sum = e.getSumInfo();
+			}
 			long tm = sum.getTotalMemory();
-			table.setValueAt(tm, Table.SPEICHER_PLATZ, i);
-			table.setValueAt("unknown", Table.SPEICHER_PLATZ_PROZENT, i);
-			table.setValueAt(sum.getDuplicateMemory() * 100.0 / tm, Table.DOPPELT_PROZENT, i);
-			table.setValueAt("unknown", Table.LAST_MODIFIED, i);
+			table.setValueAt(e.getName(), i, Table.NAME);
+			table.setValueAt(Utils.readableBytes(tm), i, Table.SPEICHER_PLATZ);
+			table.setValueAt("unknown", i, Table.SPEICHER_PLATZ_PROZENT);
+			table.setValueAt((int) (sum.getDuplicateMemory() * 100.0 / tm) + "%", i, Table.DOPPELT_PROZENT);
+			table.setValueAt(Utils.readableBytes(sum.getDuplicateMemory()) + "%", i, Table.DOPPELT);
+			table.setValueAt(sum.getLastModifiedString(), i, Table.LAST_MODIFIED);
+			if (e.isFolder() && e.getChildFiles().size() != 0 && e.getChildFolders().size() != 0) {
+				goIn[i].setVisible(true);
+			} else {
+				goIn[i].setVisible(false);
+			}
 		}
+		repaint();
 	}
 	
 	public void deleteSelected() {
@@ -130,6 +175,8 @@ public class Window extends JFrame {
 	}
 	
 	public void reload() {
+		if (blocked) return;
+		blocked = true;
 		new Thread(() -> {
 			scanStore = new ScanStore();
 			for (String zw : read) {
@@ -139,28 +186,46 @@ public class Window extends JFrame {
 				scanStore.scanFolder(zw);
 			}
 			repaint();
+			blocked = false;
 		}).start();
 	}
 	
 	public void changeSearchFolder() {
+		if (blocked) return;
+		blocked = true;
 		scanStore = new ScanStore();
 		changeSearchFolderWindow.init(() -> {
-			read = changeSearchFolderWindow.getRead();
-			search = changeSearchFolderWindow.getSearch();
-			for (String zw : read) {
-				scanStore.read(zw);
-			}
-			for (String zw : search) {
-				scanStore.scanFolder(zw);
-			}
-			stack = new ArrayList <>();
-			index = 0;
-			List <GuiInterface> zw = scanStore.getChildFiles();
-			zw.addAll(scanStore.getChildFolders());
-			element = zw.toArray(new GuiInterface[zw.size()]);
-			Arrays.parallelSort(element, (a,b) -> Long.compare(a.getSumInfo().getTotalMemory(), b.getSumInfo().getTotalMemory()));
-			rebuildTable();
-		});
+			new Thread(() -> {
+				read = changeSearchFolderWindow.getRead();
+				search = changeSearchFolderWindow.getSearch();
+				for (String zw : read) {
+					scanStore.read(zw);
+				}
+				for (String zw : search) {
+					scanStore.scanFolder(zw);
+				}
+				stack = new ArrayList <>();
+				index = 0;
+				List <GuiInterface> zw = new ArrayList <>(scanStore.getChildFiles());
+				zw.addAll(scanStore.getChildFolders());
+				element = zw.toArray(new GuiInterface[zw.size()]);
+				Arrays.parallelSort(element, (a, b) -> {
+					SumInfo sumA = a.getSumInfo();
+					if (sumA == null) {
+						a.refreshSumInfo();
+						sumA = a.getSumInfo();
+					}
+					SumInfo sumB = b.getSumInfo();
+					if (sumB == null) {
+						b.refreshSumInfo();
+						sumB = b.getSumInfo();
+					}
+					return Long.compare(sumA.getTotalMemory(), sumB.getTotalMemory());
+				});
+				rebuildTable();
+				blocked = false;
+			}).start();
+		}, () -> blocked = false);
 	}
 	
 	public void scoll(boolean up) {
@@ -171,7 +236,7 @@ public class Window extends JFrame {
 	public void goIn(int index) {
 		index += this.index;
 		stack.add(element);
-		List <GuiInterface> zw = element[index].getChildFiles();
+		List <GuiInterface> zw = new ArrayList <>(element[index].getChildFiles());
 		zw.addAll(element[index].getChildFolders());
 		element = zw.toArray(new GuiInterface[zw.size()]);
 		this.index = 0;

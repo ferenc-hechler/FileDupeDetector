@@ -4,24 +4,27 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JTable;
 
 public class ChangeSearchFolderWindow extends JFrame {
 	
 	private static final int TABLE_LEN = 6;
-
+	
 	/** UID */
 	private static final long serialVersionUID = 1610025833505675074L;
 	
-	private static final int WIDTH = 1500;
-	private static final int HEIGHT = 150;
+	private static final int WIDTH = 380;
+	private static final int HEIGHT = 90;
 	
 	
 	
 	private JTable table;
-	private MenuButton finish;
+	private JButton finish;
+	private JButton exit;
 	private volatile Runnable run;
+	private volatile Runnable kill;
 	
 	
 	
@@ -29,10 +32,12 @@ public class ChangeSearchFolderWindow extends JFrame {
 	}
 	
 	public ChangeSearchFolderWindow load() {
-		setDefaultCloseOperation(HIDE_ON_CLOSE);// Do not kill main window
-		setBounds(100, 100, WIDTH, HEIGHT);
-		
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);// if it disposes, the blocked variable in Window would block for ever
+		setBounds(0, 0, WIDTH, HEIGHT);
+		setResizable(false);
+		setLayout(null);
 		setVisible(false);
+		setLocationRelativeTo(null);
 		
 		table = new JTable(2, TABLE_LEN);
 		table.setValueAt("search", 0, 0);
@@ -40,7 +45,7 @@ public class ChangeSearchFolderWindow extends JFrame {
 		table.setShowGrid(true);
 		table.setColumnSelectionAllowed(true);
 		table.setRowHeight(15);
-		table.setBounds(70, 10, 300, 30);
+		table.setBounds(50, 10, 300, 30);
 		add(table);
 		
 		for (int i = 1; i < TABLE_LEN; i ++ ) {
@@ -48,42 +53,55 @@ public class ChangeSearchFolderWindow extends JFrame {
 				table.setValueAt("", ii, i);
 			}
 		}
-
-		finish = new MenuButton().load(10, 10, new ImageIcon("./changeFinish.png"), a -> {
+		
+		finish = new JButton();
+		finish.setIcon(new ImageIcon("./icons/changeFinish.png"));
+		finish.addActionListener(a -> {
 			setVisible(false);
 			run.run();
 		});
-		
+		finish.setBounds(10, 10, 30, 30);
 		add(finish);
+		exit = new JButton();
+		exit.setIcon(new ImageIcon("./icons/back.png"));
+		exit.addActionListener(a -> {
+			setVisible(false);
+			kill.run();
+		});
+		exit.setBounds(10, 10, 30, 30);
+		add(exit);
+		
 		return this;
 	}
 	
-	public void init(Runnable run) {
+	public void init(Runnable run, Runnable back) {
+		this.run = run;
+		this.kill = back;
+		
 		setVisible(true);
 		toFront();
 		
 		repaint();
-		
-		this.run = run;
 	}
-
-	public List<String> getSearch() {
-		List<String> erg = new ArrayList <String>();
+	
+	public List <String> getSearch() {
+		List <String> erg = new ArrayList <String>();
 		String zw;
 		for (int i = 1; i < TABLE_LEN; i ++ ) {
 			zw = table.getValueAt(0, i).toString();
-			if (!zw.isBlank()) {
+			if ( !zw.isBlank()) {
 				erg.add(zw);
 			}
 		}
 		return erg;
 	}
-	public List<String> getRead() {
-		List<String> erg = new ArrayList <String>();
+	
+	public List <String> getRead() {
+		List <String> erg = new ArrayList <String>();
 		String zw;
 		for (int i = 1; i < TABLE_LEN; i ++ ) {
 			zw = table.getValueAt(1, i).toString();
-			if (!zw.isBlank()) {
+			if ( !zw.isBlank()) {
 				erg.add(zw);
 			}
 		}

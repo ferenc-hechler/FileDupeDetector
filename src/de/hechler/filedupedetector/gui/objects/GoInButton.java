@@ -8,8 +8,8 @@ public class GoInButton extends JButton {
 	/** UID */
 	private static final long serialVersionUID = -2474422339193939902L;
 	
-	private static final int WIDTH = 50;
-	private static final int HEIGHT = 15;
+	public static final int WIDTH = 50;
+	public static final int HEIGHT = 15;
 	
 	
 	
@@ -20,6 +20,7 @@ public class GoInButton extends JButton {
 		setBounds(x, y, WIDTH, HEIGHT);
 		setIcon(new ImageIcon("./icons/goIn.png"));
 		addActionListener(e -> window.goIn(index));
+		setVisible(true);
 		return this;
 	}
 	

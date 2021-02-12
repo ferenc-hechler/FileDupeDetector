@@ -20,13 +20,24 @@ public class Table extends JTable {
 	public static final int NAME = 0;
 	public static final int SPEICHER_PLATZ = 1;
 	public static final int SPEICHER_PLATZ_PROZENT = 2;
-	public static final int DOPPELT_PROZENT = 3;
-	public static final int LAST_MODIFIED = 4;
+	public static final int DOPPELT = 3;
+	public static final int DOPPELT_PROZENT = 4;
+	public static final int LAST_MODIFIED = 5;
+
+
 	
 	
 	
 	public Table() {
-		super(ELEMENT_CNT + 1, 5);
+		super(ELEMENT_CNT + 1, 6);
+	}
+	
+	@Override
+	public void setValueAt(Object aValue, int row, int column) {
+		if (row < 0) {
+			throw new IllegalArgumentException("row < 0 | row=" + row);
+		}
+		super.setValueAt(aValue, row + 1, column);
 	}
 	
 	public Table load(int x, int y) {// TODO disallow user to edit the table
@@ -37,13 +48,14 @@ public class Table extends JTable {
 		setBounds(x, y, WIDTH, HEIGHT);
 		setRowHeight(ROW_HIGH);
 		
-		setValueAt("name", 0, NAME);
-		setValueAt("größe", 0, SPEICHER_PLATZ);
-		setValueAt("größe (%)", 0, SPEICHER_PLATZ_PROZENT);
-		setValueAt("doppelt (%)", 0, DOPPELT_PROZENT);
-		setValueAt("letzte änderung", 0, LAST_MODIFIED);
+		super.setValueAt("name", 0, NAME);
+		super.setValueAt("größe", 0, SPEICHER_PLATZ);
+		super.setValueAt("größe (%)", 0, SPEICHER_PLATZ_PROZENT);
+		super.setValueAt("doppelt", 0, DOPPELT);
+		super.setValueAt("doppelt (%)", 0, DOPPELT_PROZENT);
+		super.setValueAt("letzte änderung", 0, LAST_MODIFIED);
 		
-		for (int i = 1; i <= ELEMENT_CNT; i ++ ) {
+		for (int i = 0; i < ELEMENT_CNT; i ++ ) {
 			for (int ii = 0; ii < 5; ii ++ ) {
 				setValueAt("", i, ii);
 			}

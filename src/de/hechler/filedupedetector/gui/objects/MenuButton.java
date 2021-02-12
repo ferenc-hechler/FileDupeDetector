@@ -23,6 +23,7 @@ public class MenuButton extends JButton {
 		setBounds(x, y, WIDTH, HEIGHT);
 		setIcon(imageIcon);
 		addActionListener(action);
+		setVisible(true);
 		return this;
 	}
 
