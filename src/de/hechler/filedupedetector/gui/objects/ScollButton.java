@@ -11,7 +11,7 @@ public class ScollButton extends JButton {
 	
 	
 	public static final int WIDTH = 50;
-	public static final int HEIGHT = 250;
+	public static final int HEIGHT = 265;
 	
 	
 	
@@ -19,7 +19,7 @@ public class ScollButton extends JButton {
 	}
 	
 	
-	public ScollButton load(int x, int y, boolean scroll, Table table) {
+	public ScollButton load(int x, int y, boolean scroll, Window window) {
 		setBounds(x, y, WIDTH, HEIGHT);
 		
 		if (scroll) {
@@ -28,7 +28,7 @@ public class ScollButton extends JButton {
 			setIcon(new ImageIcon("./icons/scollButtonDown.png"));
 		}
 		
-		addActionListener(e -> table.scoll(scroll));
+		addActionListener(e -> window.scoll(scroll));
 		
 		return this;
 	}
