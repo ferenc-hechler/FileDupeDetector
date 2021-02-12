@@ -66,14 +66,16 @@ public class Window extends JFrame {
 		setResizable(false);
 		setLayout(null);
 		setLocationRelativeTo(null);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		setVisible(true);
 		
 		changeSearchFolderWindow = new ChangeSearchFolderWindow().load();
 		
-		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder(false));
+		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder());
 		reload = new MenuButton().load(X_2, Y_1, new ImageIcon("./icons/reload.png"), a -> reload());
 		table = new Table().load(X_2, Y_2);
-		up = new ScollButton().load(X_3, Y_2, true, this);
-		down = new ScollButton().load(X_3, Y_3, false, this);
+		up = new ScollButton().load(X_3, Y_3, true, this);
+		down = new ScollButton().load(X_3, Y_2, false, this);
 		goOut = new JButton();
 		goOut.setIcon(new ImageIcon("./icons/goOut.png"));
 		goOut.addActionListener(a -> goOut());
@@ -85,17 +87,52 @@ public class Window extends JFrame {
 		add(changeSearchFolderButton);
 		add(reload);
 		
+		goOut.setVisible(false);
+		up.setVisible(false);
+		down.setVisible(false);
+		reload.setVisible(false);
+		
 		goIn = new GoInButton[Table.ELEMENT_CNT];
 		
 		for (int i = 0; i < goIn.length; i ++ ) {
 			goIn[i] = new GoInButton().load(X_1, Y_2 + GoInButton.HEIGHT * (i + 1), this, i);
 			add(goIn[i]);
+			goIn[i].setVisible(false);
 		}
 		
-		setVisible(true);
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
-		
-		changeSearchFolder(true);
+		changeSearchFolderWindow.initforce(() -> {
+			new Thread(() -> {
+				read = changeSearchFolderWindow.getRead();
+				search = changeSearchFolderWindow.getSearch();
+				for (String zw : read) {
+					scanStore.read(zw);
+				}
+				for (String zw : search) {
+					scanStore.scanFolder(zw);
+				}
+				stack = new ArrayList <>();
+				index = 0;
+				List <GuiInterface> zw = new ArrayList <>(scanStore.getChildFiles());
+				zw.addAll(scanStore.getChildFolders());
+				element = zw.toArray(new GuiInterface[zw.size()]);
+				Arrays.parallelSort(element, (a, b) -> {
+					SumInfo sumA = a.getSumInfo();
+					if (sumA == null) {
+						a.refreshSumInfo();
+						sumA = a.getSumInfo();
+					}
+					SumInfo sumB = b.getSumInfo();
+					if (sumB == null) {
+						b.refreshSumInfo();
+						sumB = b.getSumInfo();
+					}
+					return Long.compare(sumB.getTotalMemory(), sumA.getTotalMemory());
+				});
+				scanStore.calcSumInfoFromChildren();
+				rebuildTable();
+				blocked = false;
+			}).start();
+		});
 		
 		return this;
 	}
@@ -128,27 +165,29 @@ public class Window extends JFrame {
 			if (i + index >= element.length) {
 				for (; i < goIn.length; i ++ ) {
 					goIn[i].setVisible(false);
-				}
-				for (int ii = 0; ii < Table.COLUMS; ii ++ ) {
-					table.setValueAt("", i, ii);
+					for (int ii = 0; ii < Table.COLUMS; ii ++ ) {
+						table.setValueAt("", i, ii);
+					}
 				}
 				break;
 			}
 			GuiInterface e = element[i + index];
-			table.setValueAt(e.getName(), Table.NAME, i);
+			table.setValueAt(e.getName(), i, Table.NAME);
 			SumInfo sum = e.getSumInfo();
 			if (sum == null) {
 				e.refreshSumInfo();
 				sum = e.getSumInfo();
 			}
 			long tm = sum.getTotalMemory();
+			boolean folder = e.isFolder();
 			table.setValueAt(e.getName(), i, Table.NAME);
 			table.setValueAt(Utils.readableBytes(tm), i, Table.SPEICHER_PLATZ);
 			table.setValueAt("unknown", i, Table.SPEICHER_PLATZ_PROZENT);
 			table.setValueAt((int) (sum.getDuplicateMemory() * 100.0 / tm) + "%", i, Table.DOPPELT_PROZENT);
 			table.setValueAt(Utils.readableBytes(sum.getDuplicateMemory()), i, Table.DOPPELT);
 			table.setValueAt(sum.getLastModifiedString(), i, Table.LAST_MODIFIED);
-			if (e.isFolder() && e.getChildFiles().size() != 0 && e.getChildFolders().size() != 0) {
+			table.setValueAt(folder ? "folder" : e.isFile() ? "file" : "unknown", i, Table.ART);
+			if (folder && (e.getChildFiles().size() != 0 || e.getChildFolders().size() != 0)) {
 				goIn[i].setVisible(true);
 			} else {
 				goIn[i].setVisible(false);
@@ -174,62 +213,47 @@ public class Window extends JFrame {
 		}).start();
 	}
 	
-	public void changeSearchFolder(boolean force) {
+	public void changeSearchFolder() {
 		if (blocked) return;
 		blocked = true;
 		scanStore = new ScanStore();
-		if (!force) {
-			changeSearchFolderWindow.init(() -> {
-				new Thread(() -> {
-					changeSearchFolderCode();
-				}).start();
-			}, () -> blocked = false);
-		} else {
-			changeSearchFolderWindow.initforce(() -> {
-				new Thread(() -> {
-					changeSearchFolderCode();
-				}).start();
-			});
-		}
+		changeSearchFolderWindow.init(() -> {
+			new Thread(() -> {
+				read = changeSearchFolderWindow.getRead();
+				search = changeSearchFolderWindow.getSearch();
+				for (String zw : read) {
+					scanStore.read(zw);
+				}
+				for (String zw : search) {
+					scanStore.scanFolder(zw);
+				}
+				stack = new ArrayList <>();
+				index = 0;
+				List <GuiInterface> zw = new ArrayList <>(scanStore.getChildFiles());
+				zw.addAll(scanStore.getChildFolders());
+				element = zw.toArray(new GuiInterface[zw.size()]);
+				Arrays.parallelSort(element, (a, b) -> {
+					SumInfo sumA = a.getSumInfo();
+					if (sumA == null) {
+						a.refreshSumInfo();
+						sumA = a.getSumInfo();
+					}
+					SumInfo sumB = b.getSumInfo();
+					if (sumB == null) {
+						b.refreshSumInfo();
+						sumB = b.getSumInfo();
+					}
+					return Long.compare(sumB.getTotalMemory(), sumA.getTotalMemory());
+				});
+				scanStore.calcSumInfoFromChildren();
+				rebuildTable();
+				blocked = false;
+			}).start();
+		}, () -> blocked = false);
 	}
 	
-	private void changeSearchFolderCode() {
-		read = changeSearchFolderWindow.getRead();
-		search = changeSearchFolderWindow.getSearch();
-		for (String zw : read) {
-			scanStore.read(zw);
-		}
-		for (String zw : search) {
-			scanStore.scanFolder(zw);
-		}
-		stack = new ArrayList <>();
-		index = 0;
-		List <GuiInterface> zw = new ArrayList <>(scanStore.getChildFiles());
-		zw.addAll(scanStore.getChildFolders());
-		element = zw.toArray(new GuiInterface[zw.size()]);
-		Arrays.parallelSort(element, (a, b) -> {
-			SumInfo sumA = a.getSumInfo();
-			if (sumA == null) {
-				a.refreshSumInfo();
-				sumA = a.getSumInfo();
-			}
-			SumInfo sumB = b.getSumInfo();
-			if (sumB == null) {
-				b.refreshSumInfo();
-				sumB = b.getSumInfo();
-			}
-			return Long.compare(sumA.getTotalMemory(), sumB.getTotalMemory());
-		});
-		scanStore.calcSumInfoFromChildren();
-		rebuildTable();
-		blocked = false;
-	}
-	
-	// private void changeSearchFolder() {
-	// }
-	//
 	public void scoll(boolean up) {
-		index += up ? Table.ELEMENT_CNT : -Table.ELEMENT_CNT;
+		index += up ? -Table.ELEMENT_CNT : Table.ELEMENT_CNT;
 		rebuildTable();
 	}
 	
