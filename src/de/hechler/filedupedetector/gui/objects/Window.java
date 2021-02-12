@@ -1,9 +1,5 @@
 package de.hechler.filedupedetector.gui.objects;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,14 +20,13 @@ public class Window extends JFrame {
 	
 	
 	
-	private static final int WIDTH = 1000;
-	private static final int HEIGHT = 1000;
+	private static final int WIDTH = 910;
+	private static final int HEIGHT = 660;
 	
 	public static final int VOID = 10;
 	private static final int X_1 = VOID;
 	private static final int X_2 = X_1 + VOID + MenuButton.SIZE;
-	private static final int X_3 = X_2 + VOID + MenuButton.SIZE;
-	private static final int X_4 = X_2 + VOID + Table.WIDTH;
+	private static final int X_3 = X_2 + VOID + Table.WIDTH;
 	private static final int Y_1 = VOID;
 	private static final int Y_2 = Y_1 + VOID + MenuButton.SIZE;
 	private static final int Y_3 = Y_2 + VOID + ScollButton.HEIGHT;
@@ -44,7 +39,6 @@ public class Window extends JFrame {
 	private MenuButton changeSearchFolderButton;
 	private ChangeSearchFolderWindow changeSearchFolderWindow;
 	private MenuButton reload;
-	private MenuButton deleteSelected;
 	private GoInButton[] goIn;
 	private JButton goOut;
 	private ScanStore scanStore;
@@ -58,6 +52,7 @@ public class Window extends JFrame {
 	
 	
 	public Window() {
+		super("FileDupeDuplicator");
 	}
 	
 	public Window load() {
@@ -76,10 +71,9 @@ public class Window extends JFrame {
 		
 		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder());
 		reload = new MenuButton().load(X_2, Y_1, new ImageIcon("./icons/reload.png"), a -> reload());
-		deleteSelected = new MenuButton().load(X_3, Y_1, new ImageIcon("./icons/delSelect.png"), a -> deleteSelected());
 		table = new Table().load(X_2, Y_2);
-		up = new ScollButton().load(X_4, Y_2, true, this);
-		down = new ScollButton().load(X_4, Y_3, false, this);
+		up = new ScollButton().load(X_3, Y_2, true, this);
+		down = new ScollButton().load(X_3, Y_3, false, this);
 		goOut = new JButton();
 		goOut.setIcon(new ImageIcon("./icons/goOut.png"));
 		goOut.addActionListener(a -> goOut());
@@ -88,7 +82,6 @@ public class Window extends JFrame {
 		add(down);
 		add(up);
 		add(table);
-		add(deleteSelected);
 		add(changeSearchFolderButton);
 		add(reload);
 		
@@ -148,7 +141,7 @@ public class Window extends JFrame {
 			table.setValueAt(Utils.readableBytes(tm), i, Table.SPEICHER_PLATZ);
 			table.setValueAt("unknown", i, Table.SPEICHER_PLATZ_PROZENT);
 			table.setValueAt((int) (sum.getDuplicateMemory() * 100.0 / tm) + "%", i, Table.DOPPELT_PROZENT);
-			table.setValueAt(Utils.readableBytes(sum.getDuplicateMemory()) + "%", i, Table.DOPPELT);
+			table.setValueAt(Utils.readableBytes(sum.getDuplicateMemory()), i, Table.DOPPELT);
 			table.setValueAt(sum.getLastModifiedString(), i, Table.LAST_MODIFIED);
 			if (e.isFolder() && e.getChildFiles().size() != 0 && e.getChildFolders().size() != 0) {
 				goIn[i].setVisible(true);
@@ -159,20 +152,21 @@ public class Window extends JFrame {
 		repaint();
 	}
 	
-	public void deleteSelected() {
-		int[] del = table.getSelectedRows();
-		for (int rem : del) {
-			if (rem == 0) continue; // ignore the head of the table
-			String val = table.getValueAt(rem, 0).toString();
-			Path path = Paths.get(val);
-			try {
-				Files.delete(path);
-			} catch (IOException e) {
-				new ErrorWindow().load(e, "could not delete");
-			}
-		}
-		rebuildTable();
-	}
+//	Soll anders sein
+//	public void deleteSelected() {
+//		int[] del = table.getSelectedRows();
+//		for (int rem : del) {
+//			if (rem == 0) continue; // ignore the head of the table
+//			String val = table.getValueAt(rem, 0).toString();
+//			Path path = Paths.get(val);
+//			try {
+//				Files.delete(path);
+//			} catch (IOException e) {
+//				new ErrorWindow().load(e, "could not delete");
+//			}
+//		}
+//		rebuildTable();
+//	}
 	
 	public void reload() {
 		if (blocked) return;
@@ -185,7 +179,8 @@ public class Window extends JFrame {
 			for (String zw : search) {
 				scanStore.scanFolder(zw);
 			}
-			repaint();
+			scanStore.calcSumInfoFromChildren();
+			rebuildTable();
 			blocked = false;
 		}).start();
 	}
@@ -222,6 +217,7 @@ public class Window extends JFrame {
 					}
 					return Long.compare(sumA.getTotalMemory(), sumB.getTotalMemory());
 				});
+				scanStore.calcSumInfoFromChildren();
 				rebuildTable();
 				blocked = false;
 			}).start();

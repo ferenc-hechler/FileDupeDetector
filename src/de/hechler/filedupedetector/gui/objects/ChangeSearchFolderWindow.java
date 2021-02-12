@@ -15,7 +15,7 @@ public class ChangeSearchFolderWindow extends JFrame {
 	/** UID */
 	private static final long serialVersionUID = 1610025833505675074L;
 	
-	private static final int WIDTH = 380;
+	private static final int WIDTH = 420;
 	private static final int HEIGHT = 90;
 	
 	
@@ -29,10 +29,11 @@ public class ChangeSearchFolderWindow extends JFrame {
 	
 	
 	public ChangeSearchFolderWindow() {
+		super("ChangeSearchFolder");
 	}
 	
 	public ChangeSearchFolderWindow load() {
-		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);// if it disposes, the blocked variable in Window would block for ever
+		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);// if it hides, the blocked variable in Window would block for ever
 		setBounds(0, 0, WIDTH, HEIGHT);
 		setResizable(false);
 		setLayout(null);
@@ -45,7 +46,7 @@ public class ChangeSearchFolderWindow extends JFrame {
 		table.setShowGrid(true);
 		table.setColumnSelectionAllowed(true);
 		table.setRowHeight(15);
-		table.setBounds(50, 10, 300, 30);
+		table.setBounds(90, 10, 300, 30);
 		add(table);
 		
 		for (int i = 1; i < TABLE_LEN; i ++ ) {
@@ -60,7 +61,7 @@ public class ChangeSearchFolderWindow extends JFrame {
 			setVisible(false);
 			run.run();
 		});
-		finish.setBounds(10, 10, 30, 30);
+		finish.setBounds(50, 10, 30, 30);
 		add(finish);
 		exit = new JButton();
 		exit.setIcon(new ImageIcon("./icons/back.png"));
