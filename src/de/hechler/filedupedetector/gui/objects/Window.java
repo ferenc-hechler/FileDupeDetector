@@ -127,6 +127,7 @@ public class Window extends JFrame {
 				for (; i < goIn.length; i ++ ) {
 					goIn[i].setVisible(false);
 				}
+				//TODO make table empty
 				break;
 			}
 			GuiInterface e = element[i + index];

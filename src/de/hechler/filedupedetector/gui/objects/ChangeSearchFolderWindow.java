@@ -90,7 +90,7 @@ public class ChangeSearchFolderWindow extends JFrame {
 		String zw;
 		for (int i = 1; i < TABLE_LEN; i ++ ) {
 			zw = table.getValueAt(0, i).toString();
-			if ( !zw.isBlank()) {
+			if ( !zw.trim().isEmpty()) {
 				erg.add(zw);
 			}
 		}
@@ -102,7 +102,7 @@ public class ChangeSearchFolderWindow extends JFrame {
 		String zw;
 		for (int i = 1; i < TABLE_LEN; i ++ ) {
 			zw = table.getValueAt(1, i).toString();
-			if ( !zw.isBlank()) {
+			if ( !zw.trim().isEmpty()) {
 				erg.add(zw);
 			}
 		}
