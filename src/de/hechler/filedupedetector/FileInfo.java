@@ -234,7 +234,7 @@ public class FileInfo implements GuiInterface {
 		if (QHashManager.getInstance().isDupe(qHash)) {
 			dupesize = filesize;
 		}
-		return new SumInfo(1, 0, filesize, dupesize);
+		return new SumInfo(1, 0, filesize, dupesize, lastModified);
 	}
 
 	@Override

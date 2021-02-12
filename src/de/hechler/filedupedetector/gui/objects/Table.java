@@ -18,16 +18,15 @@ public class Table extends JTable {
 	public static final int HEIGHT = (ELEMENT_CNT + 1) * ROW_HIGH;
 	
 	public static final int NAME = 0;
-	public static final int FREI_SPEICHER = 1;
-	public static final int SPEICHER_PLATZ = 2;
-	public static final int SPEICHER_PLATZ_PROZENT = 3;
-	public static final int DOPPELT_PROZENT = 4;
-	public static final int LAST_MODIFIED = 5;
+	public static final int SPEICHER_PLATZ = 1;
+	public static final int SPEICHER_PLATZ_PROZENT = 2;
+	public static final int DOPPELT_PROZENT = 3;
+	public static final int LAST_MODIFIED = 4;
 	
 	
 	
 	public Table() {
-		super(ELEMENT_CNT + 1, 6);
+		super(ELEMENT_CNT + 1, 5);
 	}
 	
 	public Table load(int x, int y) {// TODO disallow user to edit the table
@@ -39,14 +38,13 @@ public class Table extends JTable {
 		setRowHeight(ROW_HIGH);
 		
 		setValueAt("name", 0, NAME);
-		setValueAt("freier speicher", 0, FREI_SPEICHER);
 		setValueAt("größe", 0, SPEICHER_PLATZ);
 		setValueAt("größe (%)", 0, SPEICHER_PLATZ_PROZENT);
 		setValueAt("doppelt (%)", 0, DOPPELT_PROZENT);
 		setValueAt("letzte änderung", 0, LAST_MODIFIED);
 		
 		for (int i = 1; i <= ELEMENT_CNT; i ++ ) {
-			for (int ii = 0; ii < 6; ii ++ ) {
+			for (int ii = 0; ii < 5; ii ++ ) {
 				setValueAt("", i, ii);
 			}
 		}

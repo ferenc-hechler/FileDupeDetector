@@ -111,7 +111,6 @@ public class Window extends JFrame {
 			table.setValueAt("unknown", Table.SPEICHER_PLATZ_PROZENT, i);
 			table.setValueAt(sum.getDuplicateMemory() * 100.0 / tm, Table.DOPPELT_PROZENT, i);
 			table.setValueAt("unknown", Table.LAST_MODIFIED, i);
-			table.setValueAt("unknown", Table.FREI_SPEICHER, i);
 		}
 	}
 	
