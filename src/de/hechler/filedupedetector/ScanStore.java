@@ -7,10 +7,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -101,6 +98,7 @@ public class ScanStore implements GuiInterface {
 	 */
 	public SumInfo calcSumInfoFromChildren() {
 		QHashManager.getInstance().collectHashDupes(this);
+		QHashManager.getInstance().showStats();
 		sumInfo = new SumInfo();
 		for (BaseFolder bf:baseFolders) {
 			sumInfo.add(bf.calcSumInfoFromChildren());

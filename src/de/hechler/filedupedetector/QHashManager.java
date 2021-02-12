@@ -60,4 +60,21 @@ public class QHashManager {
 		return hash2dupeInfoMap.containsKey(qHash);
 	}
 	
+	public void showStats() {
+		long sumDifferentFiles = 0;
+		long sumDuplicateFiles = 0;
+		long sumDifferentMem = 0;
+		long sumDuplicatesMem = 0;
+		for (DupeInfo di:hash2dupeInfoMap.values()) {
+			sumDifferentFiles += 1;
+			sumDuplicateFiles += (di.numDupes-1);
+			sumDifferentMem += di.filesize;
+			sumDuplicatesMem += (di.filesize*(di.numDupes-1));
+		}
+		System.out.println("sum different files: "+sumDifferentFiles);
+		System.out.println("sum duplicate files: "+sumDuplicateFiles);
+		System.out.println("sum different memory: "+Utils.readableBytes(sumDifferentMem));
+		System.out.println("sum duplicates memory: "+Utils.readableBytes(sumDuplicatesMem));
+	}
+	
 }

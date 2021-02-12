@@ -15,10 +15,11 @@ public class DupeDetector {
 //	private final static String DEFAULT_START_FOLDER = ".\\out";
 //	private final static String DEFAULT_START_FOLDER = "G:\\test";
 //	private final static String DEFAULT_START_FOLDER = "H:\\";
+//	private final static String DEFAULT_START_FOLDER = "H:\\99\\WD-Elements-2";
 
   private final static String DEFAULT_START_FOLDER = null;
 	
-	private final static String DEFAULT_OUTPUT_FILE = "out/new.out";
+	private final static String DEFAULT_OUTPUT_FILE = "out/scans/SG-BKpl-10TB-abc.out";
 //	private final static String DEFAULT_OUTPUT_FILE = "out/SG-BKpl-10TB.out";
 	
 	public static boolean CALC_HASH = true;
