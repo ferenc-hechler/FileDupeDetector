@@ -17,11 +17,9 @@ public class MenuButton extends JButton {
 	
 	
 	public MenuButton() {
-		// TODO Auto-generated constructor stub
 	}
 	
 	public MenuButton load(int x, int y, ImageIcon imageIcon, ActionListener action) {
-		// TODO Auto-generated method stub
 		setBounds(x, y, WIDTH, HEIGHT);
 		setIcon(imageIcon);
 		addActionListener(action);

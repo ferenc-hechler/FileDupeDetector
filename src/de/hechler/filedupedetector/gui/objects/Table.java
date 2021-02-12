@@ -1,8 +1,5 @@
 package de.hechler.filedupedetector.gui.objects;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.swing.JTable;
 
 public class Table extends JTable {
@@ -21,7 +18,7 @@ public class Table extends JTable {
 	public static final int HEIGHT = (ELEMENT_CNT + 1) * ROW_HIGH;
 	
 	public static final int NAME = 0;
-	private static final int FREI_SPEICHER = 1;
+	public static final int FREI_SPEICHER = 1;
 	public static final int SPEICHER_PLATZ = 2;
 	public static final int SPEICHER_PLATZ_PROZENT = 3;
 	public static final int DOPPELT_PROZENT = 4;
@@ -33,7 +30,7 @@ public class Table extends JTable {
 		super(ELEMENT_CNT + 1, 6);
 	}
 	
-	public Table load(int x, int y, Void content) {// TODO use content + disallow user to edit the table
+	public Table load(int x, int y) {// TODO disallow user to edit the table
 		setCellSelectionEnabled(false);
 		setRowSelectionAllowed(true);
 		setEnabled(true);
@@ -48,30 +45,20 @@ public class Table extends JTable {
 		setValueAt("doppelt (%)", 0, DOPPELT_PROZENT);
 		setValueAt("letzte änderung", 0, LAST_MODIFIED);
 		
+		for (int i = 1; i <= ELEMENT_CNT; i ++ ) {
+			for (int ii = 0; ii < 6; ii ++ ) {
+				setValueAt("", i, ii);
+			}
+		}
+		
 		setAutoCreateColumnsFromModel(true);
 		setShowGrid(true);
 		
 		return this;
 	}
 	
-	public void generateGoIns(List<GoInButton> goIn) {
-		// TODO Auto-generated method stub
-	}
-	
-	public void scoll(boolean scroll) {
-		// TODO Auto-generated method stub
-	}
-	
-	public void goOut() {
-		// TODO Auto-generated method stub
-	}
-	
-	public void goIn(int index) {
-		// TODO Auto-generated method stub
-	}
-
-	public void deleteSelected() {
-		// TODO Auto-generated method stub
+	public void set() {
+		
 	}
 	
 }
