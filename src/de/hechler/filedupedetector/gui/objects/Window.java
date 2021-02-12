@@ -69,7 +69,7 @@ public class Window extends JFrame {
 		
 		changeSearchFolderWindow = new ChangeSearchFolderWindow().load();
 		
-		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder());
+		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder(false));
 		reload = new MenuButton().load(X_2, Y_1, new ImageIcon("./icons/reload.png"), a -> reload());
 		table = new Table().load(X_2, Y_2);
 		up = new ScollButton().load(X_3, Y_2, true, this);
@@ -95,10 +95,12 @@ public class Window extends JFrame {
 		setVisible(true);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
-		changeSearchFolder();
+		changeSearchFolder(true);
 		
 		return this;
 	}
+	
+	
 	
 	private void goOut() {
 		element = stack.remove(stack.size() - 1);
@@ -127,7 +129,9 @@ public class Window extends JFrame {
 				for (; i < goIn.length; i ++ ) {
 					goIn[i].setVisible(false);
 				}
-				//TODO make table empty
+				for (int ii = 0; ii < Table.COLUMS; ii ++ ) {
+					table.setValueAt("", i, ii);
+				}
 				break;
 			}
 			GuiInterface e = element[i + index];
@@ -153,22 +157,6 @@ public class Window extends JFrame {
 		repaint();
 	}
 	
-//	Soll anders sein
-//	public void deleteSelected() {
-//		int[] del = table.getSelectedRows();
-//		for (int rem : del) {
-//			if (rem == 0) continue; // ignore the head of the table
-//			String val = table.getValueAt(rem, 0).toString();
-//			Path path = Paths.get(val);
-//			try {
-//				Files.delete(path);
-//			} catch (IOException e) {
-//				new ErrorWindow().load(e, "could not delete");
-//			}
-//		}
-//		rebuildTable();
-//	}
-	
 	public void reload() {
 		if (blocked) return;
 		blocked = true;
@@ -186,45 +174,60 @@ public class Window extends JFrame {
 		}).start();
 	}
 	
-	public void changeSearchFolder() {
+	public void changeSearchFolder(boolean force) {
 		if (blocked) return;
 		blocked = true;
 		scanStore = new ScanStore();
-		changeSearchFolderWindow.init(() -> {
-			new Thread(() -> {
-				read = changeSearchFolderWindow.getRead();
-				search = changeSearchFolderWindow.getSearch();
-				for (String zw : read) {
-					scanStore.read(zw);
-				}
-				for (String zw : search) {
-					scanStore.scanFolder(zw);
-				}
-				stack = new ArrayList <>();
-				index = 0;
-				List <GuiInterface> zw = new ArrayList <>(scanStore.getChildFiles());
-				zw.addAll(scanStore.getChildFolders());
-				element = zw.toArray(new GuiInterface[zw.size()]);
-				Arrays.parallelSort(element, (a, b) -> {
-					SumInfo sumA = a.getSumInfo();
-					if (sumA == null) {
-						a.refreshSumInfo();
-						sumA = a.getSumInfo();
-					}
-					SumInfo sumB = b.getSumInfo();
-					if (sumB == null) {
-						b.refreshSumInfo();
-						sumB = b.getSumInfo();
-					}
-					return Long.compare(sumA.getTotalMemory(), sumB.getTotalMemory());
-				});
-				scanStore.calcSumInfoFromChildren();
-				rebuildTable();
-				blocked = false;
-			}).start();
-		}, () -> blocked = false);
+		if (!force) {
+			changeSearchFolderWindow.init(() -> {
+				new Thread(() -> {
+					changeSearchFolderCode();
+				}).start();
+			}, () -> blocked = false);
+		} else {
+			changeSearchFolderWindow.initforce(() -> {
+				new Thread(() -> {
+					changeSearchFolderCode();
+				}).start();
+			});
+		}
 	}
 	
+	private void changeSearchFolderCode() {
+		read = changeSearchFolderWindow.getRead();
+		search = changeSearchFolderWindow.getSearch();
+		for (String zw : read) {
+			scanStore.read(zw);
+		}
+		for (String zw : search) {
+			scanStore.scanFolder(zw);
+		}
+		stack = new ArrayList <>();
+		index = 0;
+		List <GuiInterface> zw = new ArrayList <>(scanStore.getChildFiles());
+		zw.addAll(scanStore.getChildFolders());
+		element = zw.toArray(new GuiInterface[zw.size()]);
+		Arrays.parallelSort(element, (a, b) -> {
+			SumInfo sumA = a.getSumInfo();
+			if (sumA == null) {
+				a.refreshSumInfo();
+				sumA = a.getSumInfo();
+			}
+			SumInfo sumB = b.getSumInfo();
+			if (sumB == null) {
+				b.refreshSumInfo();
+				sumB = b.getSumInfo();
+			}
+			return Long.compare(sumA.getTotalMemory(), sumB.getTotalMemory());
+		});
+		scanStore.calcSumInfoFromChildren();
+		rebuildTable();
+		blocked = false;
+	}
+	
+	// private void changeSearchFolder() {
+	// }
+	//
 	public void scoll(boolean up) {
 		index += up ? Table.ELEMENT_CNT : -Table.ELEMENT_CNT;
 		rebuildTable();

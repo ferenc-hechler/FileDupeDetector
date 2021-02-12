@@ -23,13 +23,13 @@ public class Table extends JTable {
 	public static final int DOPPELT = 3;
 	public static final int DOPPELT_PROZENT = 4;
 	public static final int LAST_MODIFIED = 5;
-
-
+	public static final int ART = 6;
+	public static final int COLUMS = 7;
 	
 	
 	
 	public Table() {
-		super(ELEMENT_CNT + 1, 6);
+		super(ELEMENT_CNT + 1, COLUMS);
 	}
 	
 	@Override
@@ -54,9 +54,10 @@ public class Table extends JTable {
 		super.setValueAt("doppelt", 0, DOPPELT);
 		super.setValueAt("doppelt (%)", 0, DOPPELT_PROZENT);
 		super.setValueAt("letzte änderung", 0, LAST_MODIFIED);
+		super.setValueAt("art", 0, ART);
 		
 		for (int i = 0; i < ELEMENT_CNT; i ++ ) {
-			for (int ii = 0; ii < 5; ii ++ ) {
+			for (int ii = 0; ii < COLUMS; ii ++ ) {
 				setValueAt("", i, ii);
 			}
 		}
