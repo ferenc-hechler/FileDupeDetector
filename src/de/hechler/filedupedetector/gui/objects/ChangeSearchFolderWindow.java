@@ -90,6 +90,8 @@ public class ChangeSearchFolderWindow extends JFrame {
 		this.run = run;
 		this.kill = back;
 		
+		exit.setEnabled(true);
+		
 		setVisible(true);
 		toFront();
 		

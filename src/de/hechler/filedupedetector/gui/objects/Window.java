@@ -2,6 +2,7 @@ package de.hechler.filedupedetector.gui.objects;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.ImageIcon;
@@ -31,6 +32,20 @@ public class Window extends JFrame {
 	private static final int Y_2 = Y_1 + VOID + MenuButton.SIZE;
 	private static final int Y_3 = Y_2 + VOID + ScollButton.HEIGHT;
 	
+	private static final Comparator<GuiInterface> COMPERATOR = (a, b) -> {
+		SumInfo sumA = a.getSumInfo();
+		if (sumA == null) {
+			a.refreshSumInfo();
+			sumA = a.getSumInfo();
+		}
+		SumInfo sumB = b.getSumInfo();
+		if (sumB == null) {
+			b.refreshSumInfo();
+			sumB = b.getSumInfo();
+		}
+		return Long.compare(sumB.getTotalMemory(), sumA.getTotalMemory());
+	};
+	
 	
 	
 	private Table table;
@@ -42,12 +57,24 @@ public class Window extends JFrame {
 	private GoInButton[] goIn;
 	private JButton goOut;
 	private ScanStore scanStore;
-	private List <GuiInterface[]> stack;
+	private List <StackElement> stack;
 	private GuiInterface[] element;
 	private int index;
 	private List <String> search;
 	private List <String> read;
 	private volatile boolean blocked = false;
+	private long parentMemory;
+	
+	
+	private class StackElement {
+		GuiInterface[] value;
+		long parentMemory;
+		
+		public StackElement(GuiInterface[] value, long parentMemory) {
+			StackElement.this.value = value;
+			StackElement.this.parentMemory = parentMemory;
+		}
+	}
 	
 	
 	
@@ -115,20 +142,9 @@ public class Window extends JFrame {
 				List <GuiInterface> zw = new ArrayList <>(scanStore.getChildFiles());
 				zw.addAll(scanStore.getChildFolders());
 				element = zw.toArray(new GuiInterface[zw.size()]);
-				Arrays.parallelSort(element, (a, b) -> {
-					SumInfo sumA = a.getSumInfo();
-					if (sumA == null) {
-						a.refreshSumInfo();
-						sumA = a.getSumInfo();
-					}
-					SumInfo sumB = b.getSumInfo();
-					if (sumB == null) {
-						b.refreshSumInfo();
-						sumB = b.getSumInfo();
-					}
-					return Long.compare(sumB.getTotalMemory(), sumA.getTotalMemory());
-				});
+				Arrays.parallelSort(element, COMPERATOR);
 				scanStore.calcSumInfoFromChildren();
+				parentMemory = scanStore.getSumInfo().getTotalMemory();
 				rebuildTable();
 				blocked = false;
 			}).start();
@@ -140,7 +156,9 @@ public class Window extends JFrame {
 	
 	
 	private void goOut() {
-		element = stack.remove(stack.size() - 1);
+		StackElement se = stack.remove(stack.size() - 1);
+		element = se.value;
+		parentMemory = se.parentMemory;
 		index = 0;
 		rebuildTable();
 	}
@@ -182,7 +200,7 @@ public class Window extends JFrame {
 			boolean folder = e.isFolder();
 			table.setValueAt(e.getName(), i, Table.NAME);
 			table.setValueAt(Utils.readableBytes(tm), i, Table.SPEICHER_PLATZ);
-			table.setValueAt("unknown", i, Table.SPEICHER_PLATZ_PROZENT);
+			table.setValueAt((int) (tm * 100.0 / parentMemory) + "%", i, Table.SPEICHER_PLATZ_PROZENT);
 			table.setValueAt((int) (sum.getDuplicateMemory() * 100.0 / tm) + "%", i, Table.DOPPELT_PROZENT);
 			table.setValueAt(Utils.readableBytes(sum.getDuplicateMemory()), i, Table.DOPPELT);
 			table.setValueAt(sum.getLastModifiedString(), i, Table.LAST_MODIFIED);
@@ -232,19 +250,7 @@ public class Window extends JFrame {
 				List <GuiInterface> zw = new ArrayList <>(scanStore.getChildFiles());
 				zw.addAll(scanStore.getChildFolders());
 				element = zw.toArray(new GuiInterface[zw.size()]);
-				Arrays.parallelSort(element, (a, b) -> {
-					SumInfo sumA = a.getSumInfo();
-					if (sumA == null) {
-						a.refreshSumInfo();
-						sumA = a.getSumInfo();
-					}
-					SumInfo sumB = b.getSumInfo();
-					if (sumB == null) {
-						b.refreshSumInfo();
-						sumB = b.getSumInfo();
-					}
-					return Long.compare(sumB.getTotalMemory(), sumA.getTotalMemory());
-				});
+				Arrays.parallelSort(element, COMPERATOR);
 				scanStore.calcSumInfoFromChildren();
 				rebuildTable();
 				blocked = false;
@@ -259,10 +265,12 @@ public class Window extends JFrame {
 	
 	public void goIn(int index) {
 		index += this.index;
-		stack.add(element);
+		stack.add(new StackElement(element, parentMemory));
+		parentMemory = element[index].getSumInfo().getTotalMemory();
 		List <GuiInterface> zw = new ArrayList <>(element[index].getChildFiles());
 		zw.addAll(element[index].getChildFolders());
 		element = zw.toArray(new GuiInterface[zw.size()]);
+		Arrays.parallelSort(element, COMPERATOR);
 		this.index = 0;
 		rebuildTable();
 	}
