@@ -31,7 +31,6 @@ public class Window extends JFrame {
 	private static final int Y_1 = VOID;
 	private static final int Y_2 = Y_1 + VOID + MenuButton.SIZE;
 	private static final int Y_3 = Y_2 + VOID + ScollButton.HEIGHT;
-	
 	private static final Comparator<GuiInterface> COMPERATOR = (a, b) -> {
 		SumInfo sumA = a.getSumInfo();
 		if (sumA == null) {
@@ -227,7 +226,7 @@ public class Window extends JFrame {
 			scanStore.calcSumInfoFromChildren();
 			rebuildTable();
 			blocked = false;
-			new FinishRefresh().load();
+			new FinishRefreshWindow().load();
 		}).start();
 	}
 	
@@ -237,6 +236,7 @@ public class Window extends JFrame {
 		scanStore = new ScanStore();
 		changeSearchFolderWindow.init(() -> {
 			new Thread(() -> {
+				ChangeSearchLogWindow log = new ChangeSearchLogWindow().load();
 				read = changeSearchFolderWindow.getRead();
 				search = changeSearchFolderWindow.getSearch();
 				for (String zw : read) {
@@ -253,6 +253,7 @@ public class Window extends JFrame {
 				Arrays.parallelSort(element, COMPERATOR);
 				scanStore.calcSumInfoFromChildren();
 				rebuildTable();
+				log.finish();
 				blocked = false;
 			}).start();
 		}, () -> blocked = false);

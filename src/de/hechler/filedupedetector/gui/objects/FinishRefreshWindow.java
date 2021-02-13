@@ -3,16 +3,16 @@ package de.hechler.filedupedetector.gui.objects;
 import javax.swing.JFrame;
 
 
-public class FinishRefresh extends JFrame {
+public class FinishRefreshWindow extends JFrame {
 	
 	/** UID */
 	private static final long serialVersionUID = 7508842172663685044L;
 	
 	
-	public FinishRefresh() {
+	public FinishRefreshWindow() {
 	}
 	
-	public FinishRefresh load() {
+	public FinishRefreshWindow load() {
 		
 //		TODO machen
 		return this;
