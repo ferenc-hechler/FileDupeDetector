@@ -26,11 +26,13 @@ public class ErrorWindow extends JFrame {
 		setResizable(true);
 		setVisible(true);
 		toFront();
+		setLayout(null);
 		setBounds(0, 0, 200, 120);
 		JTextField text = new JTextField();
 		text.setBounds(70, 10, 15, 100);
 		text.setText(e.getMessage());
 		JButton button = new JButton(new ImageIcon("./icons/errorExpand.png"));
+		button.setBounds(10, 10, 50, 50);
 		button.addActionListener(a -> {
 			synchronized (state) {
 				if (state) {

@@ -117,7 +117,6 @@ public class Window extends JFrame {
 		goOut.setVisible(false);
 		up.setVisible(false);
 		down.setVisible(false);
-		reload.setVisible(false);
 		
 		goIn = new GoInButton[Table.ELEMENT_CNT];
 		
@@ -228,6 +227,7 @@ public class Window extends JFrame {
 			scanStore.calcSumInfoFromChildren();
 			rebuildTable();
 			blocked = false;
+			new FinishRefresh().load();
 		}).start();
 	}
 	
@@ -258,8 +258,8 @@ public class Window extends JFrame {
 		}, () -> blocked = false);
 	}
 	
-	public void scoll(boolean up) {
-		index += up ? -Table.ELEMENT_CNT : Table.ELEMENT_CNT;
+	public void scoll(boolean down) {
+		index += down ? Table.ELEMENT_CNT : -Table.ELEMENT_CNT;
 		rebuildTable();
 	}
 	

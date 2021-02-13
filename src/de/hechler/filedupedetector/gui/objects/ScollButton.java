@@ -19,16 +19,16 @@ public class ScollButton extends JButton {
 	}
 	
 	
-	public ScollButton load(int x, int y, boolean scroll, Window window) {
+	public ScollButton load(int x, int y, boolean scrollUp, Window window) {
 		setBounds(x, y, WIDTH, HEIGHT);
 		
-		if (scroll) {
+		if (scrollUp) {
 			setIcon(new ImageIcon("./icons/scollButtonUp.png"));
 		} else {
 			setIcon(new ImageIcon("./icons/scollButtonDown.png"));
 		}
 		
-		addActionListener(e -> window.scoll(scroll));
+		addActionListener(e -> window.scoll(scrollUp));
 		
 		return this;
 	}
