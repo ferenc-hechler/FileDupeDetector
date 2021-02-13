@@ -55,5 +55,9 @@ public class SumInfo {
 		}
 		return Utils.date2string(lastModified);
 	}
+
+	public void reduceDuplicates(long duplicationReduction) {
+		duplicateMemory -= duplicationReduction;
+	}
 	
 }

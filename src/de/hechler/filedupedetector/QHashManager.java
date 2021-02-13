@@ -20,6 +20,7 @@ public class QHashManager {
 		}
 	}
 	public Map<String, DupeInfo> hash2dupeInfoMap; 
+	public Map<Folder, Long> folder2allDupesCompensationBytes; 
 
 	private static QHashManager instance;
 	public static QHashManager getInstance() {
@@ -30,10 +31,13 @@ public class QHashManager {
 	}
 	private QHashManager() {
 		hash2dupeInfoMap = new HashMap<>();
+		folder2allDupesCompensationBytes = new HashMap<>();
 	}
 
 
 	public void collectHashDupes(ScanStore store) {
+		hash2dupeInfoMap = new HashMap<>();
+		folder2allDupesCompensationBytes = new HashMap<>();
 		final Set<String> hashValues = new HashSet<>(); 
 		final Set<String> duplicateHashValues = new HashSet<>();
 		store.visitFiles((folder, file) -> {
@@ -54,6 +58,10 @@ public class QHashManager {
 				}
 			}
 		});
+		for (DupeInfo di:hash2dupeInfoMap.values()) {
+			Folder f = di.dupeRootFolder;
+			folder2allDupesCompensationBytes.put(f, folder2allDupesCompensationBytes.getOrDefault(f, 0L) + di.filesize);
+		}
 	}
 
 	public boolean isDupe(String qHash) {
@@ -75,6 +83,9 @@ public class QHashManager {
 		System.out.println("sum duplicate files: "+sumDuplicateFiles);
 		System.out.println("sum different memory: "+Utils.readableBytes(sumDifferentMem));
 		System.out.println("sum duplicates memory: "+Utils.readableBytes(sumDuplicatesMem));
+	}
+	public long getDuplicationReduction(Folder folder) {
+		return folder2allDupesCompensationBytes.getOrDefault(folder, 0L);
 	}
 	
 }

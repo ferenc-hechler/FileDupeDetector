@@ -103,6 +103,7 @@ public class ScanStore implements GuiInterface {
 		for (BaseFolder bf:baseFolders) {
 			sumInfo.add(bf.calcSumInfoFromChildren());
 		}
+		sumInfo.reduceDuplicates(QHashManager.getInstance().getDuplicationReduction(null));
 		return sumInfo;
 	}
 

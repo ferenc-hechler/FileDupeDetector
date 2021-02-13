@@ -134,6 +134,7 @@ public class Folder implements GuiInterface {
 			sumInfo.add(file.getSumInfo());
 		}
 		sumInfo.addNumFolders(1);
+		sumInfo.reduceDuplicates(QHashManager.getInstance().getDuplicationReduction(this));
 		return sumInfo;
 	}
 
