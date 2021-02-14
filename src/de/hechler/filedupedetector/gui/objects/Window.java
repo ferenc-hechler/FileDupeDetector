@@ -161,6 +161,7 @@ public class Window extends JFrame {
 	}
 	
 	private void delete() {
+		//Beispiel:
 //		int[] del = table.getSelectedRows();
 //		for (int rem : del) {
 //			if (rem == 0) continue;
