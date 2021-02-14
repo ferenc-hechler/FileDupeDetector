@@ -31,7 +31,7 @@ public class Window extends JFrame {
 	private static final int Y_1 = VOID;
 	private static final int Y_2 = Y_1 + VOID + MenuButton.SIZE;
 	private static final int Y_3 = Y_2 + VOID + ScollButton.HEIGHT;
-	private static final Comparator<GuiInterface> COMPERATOR = (a, b) -> {
+	private static final Comparator <GuiInterface> COMPERATOR = (a, b) -> {
 		SumInfo sumA = a.getSumInfo();
 		if (sumA == null) {
 			a.refreshSumInfo();
@@ -55,7 +55,7 @@ public class Window extends JFrame {
 	private MenuButton reload;
 	private MenuButton save;
 	private SmallButton[] goIn;
-	private SmallButton[] delete;
+	private MenuButton delete;
 	private JButton goOut;
 	private ScanStore scanStore;
 	private List <StackElement> stack;
@@ -64,17 +64,19 @@ public class Window extends JFrame {
 	private List <String> search;
 	private List <String> read;
 	private volatile boolean blocked = false;
-	private long parentMemory;
+	private GuiInterface parent;
 	
 	
 	private class StackElement {
-		GuiInterface[] value;
-		long parentMemory;
 		
-		public StackElement(GuiInterface[] value, long parentMemory) {
+		GuiInterface[] value;
+		GuiInterface parent;
+		
+		public StackElement(GuiInterface[] value, GuiInterface parent) {
 			StackElement.this.value = value;
-			StackElement.this.parentMemory = parentMemory;
+			StackElement.this.parent = parent;
 		}
+		
 	}
 	
 	
@@ -109,6 +111,8 @@ public class Window extends JFrame {
 		goOut.setIcon(new ImageIcon("./icons/goOut.png"));
 		goOut.addActionListener(a -> goOut());
 		goOut.setBounds(X_1, Y_2, 50, 15);
+		delete = new MenuButton().load(X_2 + VOID + MenuButton.SIZE + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/deleteMarked.png"), a -> delete());
+		add(delete);
 		add(goOut);
 		add(down);
 		add(up);
@@ -125,18 +129,9 @@ public class Window extends JFrame {
 		
 		for (int i = 0; i < goIn.length; i ++ ) {
 			final int index = i;
-			goIn[i] = new SmallButton().load(X_1 + SmallButton.WIDTH, Y_2 + SmallButton.HEIGHT * (i + 1), new ImageIcon("./icons/goIn.png"), e -> goIn(index));
+			goIn[i] = new SmallButton().load(X_1, Y_2 + SmallButton.HEIGHT * (i + 1), new ImageIcon("./icons/goIn.png"), e -> goIn(index));
 			add(goIn[i]);
 			goIn[i].setVisible(false);
-		}
-		
-		delete = new SmallButton[Table.ELEMENT_CNT];
-		
-		for (int i = 0; i < goIn.length; i ++ ) {
-			final int index = i;
-			delete[i] = new SmallButton().load(X_1, Y_2 + SmallButton.HEIGHT * (i + 1), new ImageIcon("./icons/delete.png"), e -> delete(index));
-			add(delete[i]);
-			delete[i].setVisible(false);
 		}
 		
 		changeSearchFolderWindow.initforce(() -> {
@@ -156,7 +151,7 @@ public class Window extends JFrame {
 				element = zw.toArray(new GuiInterface[zw.size()]);
 				Arrays.parallelSort(element, COMPERATOR);
 				scanStore.calcSumInfoFromChildren();
-				parentMemory = scanStore.getSumInfo().getTotalMemory();
+				parent = null;
 				rebuildTable();
 				blocked = false;
 			}).start();
@@ -165,18 +160,30 @@ public class Window extends JFrame {
 		return this;
 	}
 	
-	private void delete(int i) {
+	private void delete() {
+//		int[] del = table.getSelectedRows();
+//		for (int rem : del) {
+//			if (rem == 0) continue;
+//			rem += index;
+//			 parent.remove(element[rem]);
+//			if (element[rem].isFile()) {
+//				parent.removeFile(element[rem]);
+//			} else {
+//				parent.removeFolder(element[rem]);
+//			}
+//		}
+//		rebuildTable();
 		throw new UnsupportedOperationException("Not yet implemented!");
 	}
-
+	
 	private void save() {
 		new SaveWindow().load(this);
 	}
-
+	
 	private void goOut() {
 		StackElement se = stack.remove(stack.size() - 1);
 		element = se.value;
-		parentMemory = se.parentMemory;
+		parent = se.parent;
 		index = 0;
 		rebuildTable();
 	}
@@ -207,7 +214,6 @@ public class Window extends JFrame {
 				}
 				break;
 			}
-			delete[i].setVisible(true);
 			GuiInterface e = element[i + index];
 			table.setValueAt(e.getName(), i, Table.NAME);
 			SumInfo sum = e.getSumInfo();
@@ -219,7 +225,7 @@ public class Window extends JFrame {
 			boolean folder = e.isFolder();
 			table.setValueAt(e.getName(), i, Table.NAME);
 			table.setValueAt(Utils.readableBytes(tm), i, Table.SPEICHER_PLATZ);
-			table.setValueAt((int) (tm * 100.0 / parentMemory) + "%", i, Table.SPEICHER_PLATZ_PROZENT);
+			table.setValueAt((int) (tm * 100.0 / parent.getSumInfo().getTotalMemory()) + "%", i, Table.SPEICHER_PLATZ_PROZENT);
 			table.setValueAt((int) (sum.getDuplicateMemory() * 100.0 / tm) + "%", i, Table.DOPPELT_PROZENT);
 			table.setValueAt(Utils.readableBytes(sum.getDuplicateMemory()), i, Table.DOPPELT);
 			table.setValueAt(sum.getLastModifiedString(), i, Table.LAST_MODIFIED);
@@ -287,8 +293,8 @@ public class Window extends JFrame {
 	
 	public void goIn(int index) {
 		index += this.index;
-		stack.add(new StackElement(element, parentMemory));
-		parentMemory = element[index].getSumInfo().getTotalMemory();
+		stack.add(new StackElement(element, element[index]));
+		parent = element[index];
 		List <GuiInterface> zw = new ArrayList <>(element[index].getChildFiles());
 		zw.addAll(element[index].getChildFolders());
 		element = zw.toArray(new GuiInterface[zw.size()]);
@@ -296,7 +302,7 @@ public class Window extends JFrame {
 		this.index = 0;
 		rebuildTable();
 	}
-
+	
 	public void saveTo(String file) {
 		scanStore.write(file);
 	}
