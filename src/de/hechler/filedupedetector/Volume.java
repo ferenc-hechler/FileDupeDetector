@@ -154,5 +154,13 @@ public class Volume {
 	public String toString() {
 		return getChangeableInfo();
 	}
+
+	public long getVolSize() {
+		return volSize;
+	}
+
+	public void setVolSize(long volSize) {
+		this.volSize = volSize;
+	}
 	
 }

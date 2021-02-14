@@ -35,8 +35,12 @@ public class BaseFolder extends Folder {
 		this.foldername = baseFolderPath;
 	}
 	
-	public Path getPath() {
+	@Override public Path getPath() {
 		return volume.getPath().resolve(foldername);
+	}
+
+	@Override public void delete() {
+		// TODO: implement
 	}
 
 	public void write(PrintStream out) {
@@ -44,11 +48,6 @@ public class BaseFolder extends Folder {
 		super.write(out);
 	}
 	
-	@Override
-	protected boolean isBaseFolder() {
-		return true;
-	}
-
 	public static BaseFolder read(BufferedReader in) {
 		try {
 			Volume vol = Volume.read(in);
@@ -107,5 +106,10 @@ public class BaseFolder extends Folder {
 		return getPath().toString();
 	}
 
+	@Override public boolean isVolume() { return true; }
+	@Override public long getVolumeSize() {
+		return volume.getVolSize();
+	}
 
+	
 }

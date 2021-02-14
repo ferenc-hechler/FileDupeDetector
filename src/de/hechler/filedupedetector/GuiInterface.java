@@ -1,5 +1,6 @@
 package de.hechler.filedupedetector;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public interface GuiInterface {
@@ -15,6 +16,18 @@ public interface GuiInterface {
 	 * @return
 	 */
 	public boolean isFile();
+	
+	/**
+	 * gibt zurueck, ob es sich bei dem aktuellen Element um eine Laufwerk handelt. 
+	 * @return
+	 */
+	public boolean isVolume();
+	
+	/**
+	 * gibt zurueck, ob es sich bei dem aktuellen Element um den ScanStore handelt. 
+	 * @return
+	 */
+	public boolean isRoot();
 	
 	/**
 	 * Name der Datei oder des Ordners.
@@ -44,5 +57,28 @@ public interface GuiInterface {
 	 * @return
 	 */
 	public List<GuiInterface> getChildFiles();
+
+	/**
+	 * gibt den uebergeordneten Ordner zurueck.
+	 * @return
+	 */
+	public GuiInterface getParent();
+
+	/**
+	 * Gibt den Pfad für dieses Element zurück (Ordner oder Datei). 
+	 * @return
+	 */
+	public Path getPath();
+	
+	/**
+	 * fuer Volumes (isVolume()==true) kann abgefragt werden, wie groß das Laufwerk ist.
+	 * @return
+	 */
+	public long getVolumeSize();
+	
+	/**
+	 * loescht die Datei/den Ordner in den Metadaten, nicht im Dateisystem! 
+	 */
+	public void delete();
 	
 }

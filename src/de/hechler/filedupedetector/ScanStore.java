@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -107,9 +108,6 @@ public class ScanStore implements GuiInterface {
 		return sumInfo;
 	}
 
-	private Folder getParentFolder(Folder folder, Folder dupeRootFolder) {
-		return null;
-	}
 
 	public List<BaseFolder> getBaseFolders() {
 		return baseFolders;
@@ -122,35 +120,42 @@ public class ScanStore implements GuiInterface {
 		return sumInfo;
 	}
 
-	@Override
-	public boolean isFolder() {
-		return true;
+	@Override public boolean isFolder() { return true; }
+	@Override public boolean isFile() { return false; }
+	@Override public boolean isVolume() { return false; }
+	@Override public boolean isRoot() { return true; }
+	
+	@Override public long getVolumeSize() {
+		throw new UnsupportedOperationException("Root (ScanStore) can not be queried for volumeSize");
+	}
+	
+	@Override public String getName() {
+		return "Dieser PC";
 	}
 
-	@Override
-	public boolean isFile() {
-		return false;
-	}
-
-	@Override
-	public String getName() {
-		return "Dieser Computer";
-	}
-
-	@Override
-	public void refreshSumInfo() {
+	@Override public void refreshSumInfo() {
 		calcSumInfoFromChildren();
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	public List<GuiInterface> getChildFolders() {
+	@Override public List<GuiInterface> getChildFolders() {
 		return (List) getBaseFolders();
 	}
 
-	@Override
-	public List<GuiInterface> getChildFiles() {
+	@Override public List<GuiInterface> getChildFiles() {
 		return Collections.emptyList();
 	}
-	
+
+	@Override public GuiInterface getParent() {
+		return null;
+	}
+
+	@Override public Path getPath() {
+		return null;
+	}
+
+	@Override public void delete() {
+		throw new UnsupportedOperationException("Root (ScanStore) can not be deleted.");
+	}
+
 }

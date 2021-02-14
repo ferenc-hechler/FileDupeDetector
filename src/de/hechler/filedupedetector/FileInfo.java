@@ -36,13 +36,15 @@ public class FileInfo implements GuiInterface {
 		progress.setCntStepsBeforeTimeCheck(500);
 	}
 
+	private Folder parent;
 	private String filename;
 	private long filesize;
 	private long lastModified;
 	private String qHash;
 
-	public FileInfo(Path file) {
+	public FileInfo(Folder parent, Path file) {
 		try {
+			this.parent = parent;
 			this.filename = file.getFileName().toString();
 			lastModified = Files.getLastModifiedTime(file).toMillis();
 			filesize = Files.size(file);
@@ -52,7 +54,8 @@ public class FileInfo implements GuiInterface {
 		}
 	}
 
-	public FileInfo(String filename, long filesize, long lastModified, String qHash) {
+	public FileInfo(Folder parent, String filename, long filesize, long lastModified, String qHash) {
+		this.parent = parent;
 		this.filename = filename;
 		this.filesize = filesize;
 		this.lastModified = lastModified;
@@ -168,12 +171,9 @@ public class FileInfo implements GuiInterface {
 		return qHash;
 	}
 
-	public Path getPath(Folder folder) {
-		return getPath(folder.getPath());
-	}
-
-	public Path getPath(Path path) {
-		return path.resolve(filename);
+	@Override
+	public Path getPath() {
+		return parent.getPath().resolve(filename);
 	}
 
 	/**
@@ -194,13 +194,13 @@ public class FileInfo implements GuiInterface {
 	/**
 	 * NOT THREADSAFE!
 	 */
-	public static FileInfo read(String line) {
+	public static FileInfo read(Folder folder, String line) {
 		String[] qhash_filename_filesize_lmdate = line.split("["+COLUMN_SEPERATOR+"]");
 		String qHash = qhash_filename_filesize_lmdate[0];
 		String filename = qhash_filename_filesize_lmdate[1];
 		long filesize = Long.parseLong(qhash_filename_filesize_lmdate[2]);
 		long lmDate = Utils.string2date(qhash_filename_filesize_lmdate[3]);
-		return new FileInfo(filename, filesize, lmDate, qHash);
+		return new FileInfo(folder, filename, filesize, lmDate, qHash);
 	}
 
 	@Override
@@ -208,28 +208,20 @@ public class FileInfo implements GuiInterface {
 		return filename;
 	}
 
-	@Override
-	public boolean isFolder() {
-		return false;
-	}
+	@Override public boolean isFolder() { return false; }
+	@Override public boolean isFile() { return true; }
+	@Override public boolean isVolume() { return false; }
+	@Override public boolean isRoot() { return false; }	
 
-	@Override
-	public boolean isFile() {
-		return true;
-	}
-
-	@Override
-	public String getName() {
+	@Override public String getName() {
 		return filename;
 	}
 
-	@Override
-	public void refreshSumInfo() {
+	@Override public void refreshSumInfo() {
 		// nothing to do.
 	}
 
-	@Override
-	public SumInfo getSumInfo() {
+	@Override public SumInfo getSumInfo() {
 		long dupesize = 0;
 		if (QHashManager.getInstance().isDupe(qHash)) {
 			dupesize = filesize;
@@ -237,14 +229,25 @@ public class FileInfo implements GuiInterface {
 		return new SumInfo(1, 0, filesize, dupesize, lastModified);
 	}
 
-	@Override
-	public List<GuiInterface> getChildFolders() {
+	@Override public List<GuiInterface> getChildFolders() {
 		return Collections.emptyList();
 	}
 
-	@Override
-	public List<GuiInterface> getChildFiles() {
+	@Override public List<GuiInterface> getChildFiles() {
 		return Collections.emptyList();
 	}
+
+	@Override public long getVolumeSize() {
+		throw new UnsupportedOperationException("FileInfo ("+toString()+") can not be queried for volumeSize");
+	}
+
+	@Override public GuiInterface getParent() {
+		return parent;
+	}
+
+	@Override public void delete() {
+		// TODO Auto-generated method stub
+	}
+
 	
 }

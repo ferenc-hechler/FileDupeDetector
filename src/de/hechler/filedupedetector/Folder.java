@@ -38,7 +38,7 @@ public class Folder implements GuiInterface {
 				}
 				else {
 					try {
-						files.add(new FileInfo(child));
+						files.add(new FileInfo(this, child));
 					}
 					catch (Exception e) {
 						System.err.println("error reading file "+child+": "+e.toString());
@@ -61,16 +61,16 @@ public class Folder implements GuiInterface {
 		}
 	}
 	
-	public Path getPath() {
+	@Override public Path getPath() {
 		return parent.getPath().resolve(foldername);
 	}
 
-	public Folder getParent() {
+	@Override public Folder getParent() {
 		return parent;
 	}
 
 	public void write(PrintStream out) {
-		if (isBaseFolder() || (files.size() > 0)) {
+		if (isVolume() || (files.size() > 0)) {
 			out.println("FOLDER "+getPath().toString().substring(2));
 			for (FileInfo file:files) {
 				file.write(out);
@@ -86,7 +86,7 @@ public class Folder implements GuiInterface {
 		try {
 			String line = in.readLine();
 			while (!line.isEmpty()) {
-				FileInfo file = FileInfo.read(line);
+				FileInfo file = FileInfo.read(this, line);
 				files.add(file);
 				line = in.readLine();
 			}
@@ -95,10 +95,6 @@ public class Folder implements GuiInterface {
 		}
 	}
 	
-	protected boolean isBaseFolder() {
-		return false;
-	}
-
 	public void visitFiles(BiConsumer<Folder, FileInfo> visitor) {
 		for (FileInfo file:files) {
 			visitor.accept(this, file);
@@ -138,46 +134,43 @@ public class Folder implements GuiInterface {
 		return sumInfo;
 	}
 
-	@Override
-	public String toString() {
+	@Override public String toString() {
 		return foldername;
 	}
 
-	@Override
-	public boolean isFolder() {
-		return true;
+	@Override public boolean isFolder() { return true; }
+	@Override public boolean isFile() { return false; }
+	@Override public boolean isVolume() { return false; }
+	@Override public boolean isRoot() { return false; }	
+	
+	@Override public long getVolumeSize() {
+		throw new UnsupportedOperationException("Folder ("+toString()+") can not be queried for volumeSize");
 	}
 
-	@Override
-	public boolean isFile() {
-		return false;
-	}
-
-	@Override
-	public String getName() {
+	@Override public String getName() {
 		return foldername;
 	}
 
-	@Override
-	public void refreshSumInfo() {
+	@Override public void refreshSumInfo() {
 		calcSumInfoFromChildren();
 	}
 
-	@Override
-	public SumInfo getSumInfo() {
+	@Override public SumInfo getSumInfo() {
 		return sumInfo;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public List<GuiInterface> getChildFolders() {
+	@Override public List<GuiInterface> getChildFolders() {
 		return (List)childFolders;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	@Override
-	public List<GuiInterface> getChildFiles() {
+	@Override public List<GuiInterface> getChildFiles() {
 		return (List)files;
+	}
+
+	@Override public void delete() {
+		// TODO: implement for folder.
 	}
 
 	public Folder getCommonParentFolder(Folder otherFolder) {
