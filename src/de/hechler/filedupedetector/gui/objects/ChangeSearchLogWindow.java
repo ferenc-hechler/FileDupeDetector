@@ -19,7 +19,7 @@ public class ChangeSearchLogWindow extends JFrame {
 		
 		text = new JTextField("working");
 		setBounds(0, 0, 50, 100);
-		text.setBounds(10, 10, 15, 80);
+		text.setBounds(10, 10, 80, 15);
 		add(text);
 		
 		setVisible(true);

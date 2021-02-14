@@ -226,7 +226,21 @@ public class Window extends JFrame {
 			boolean folder = e.isFolder();
 			table.setValueAt(e.getName(), i, Table.NAME);
 			table.setValueAt(Utils.readableBytes(tm), i, Table.SPEICHER_PLATZ);
-			table.setValueAt((int) (tm * 100.0 / parent.getSumInfo().getTotalMemory()) + "%", i, Table.SPEICHER_PLATZ_PROZENT);
+			SumInfo parentsum;
+			if(parent == null) {
+				parentsum = scanStore.getSumInfo();
+				if (parentsum == null) {
+					scanStore.refreshSumInfo();
+					parentsum = parent.getSumInfo();
+				}
+			}else {
+				parentsum = parent.getSumInfo();
+				if (parentsum == null) {
+					parent.refreshSumInfo();
+					parentsum = parent.getSumInfo();
+				}
+			}
+			table.setValueAt((int) (tm * 100.0 / parentsum.getTotalMemory()) + "%", i, Table.SPEICHER_PLATZ_PROZENT);
 			table.setValueAt((int) (sum.getDuplicateMemory() * 100.0 / tm) + "%", i, Table.DOPPELT_PROZENT);
 			table.setValueAt(Utils.readableBytes(sum.getDuplicateMemory()), i, Table.DOPPELT);
 			table.setValueAt(sum.getLastModifiedString(), i, Table.LAST_MODIFIED);
