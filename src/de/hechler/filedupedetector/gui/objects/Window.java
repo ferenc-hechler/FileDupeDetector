@@ -54,7 +54,8 @@ public class Window extends JFrame {
 	private ChangeSearchFolderWindow changeSearchFolderWindow;
 	private MenuButton reload;
 	private MenuButton save;
-	private GoInButton[] goIn;
+	private SmallButton[] goIn;
+	private SmallButton[] delete;
 	private JButton goOut;
 	private ScanStore scanStore;
 	private List <StackElement> stack;
@@ -120,12 +121,22 @@ public class Window extends JFrame {
 		up.setVisible(false);
 		down.setVisible(false);
 		
-		goIn = new GoInButton[Table.ELEMENT_CNT];
+		goIn = new SmallButton[Table.ELEMENT_CNT];
 		
 		for (int i = 0; i < goIn.length; i ++ ) {
-			goIn[i] = new GoInButton().load(X_1, Y_2 + GoInButton.HEIGHT * (i + 1), this, i);
+			final int index = i;
+			goIn[i] = new SmallButton().load(X_1 + SmallButton.WIDTH, Y_2 + SmallButton.HEIGHT * (i + 1), new ImageIcon("./icons/goIn.png"), e -> goIn(index));
 			add(goIn[i]);
 			goIn[i].setVisible(false);
+		}
+		
+		delete = new SmallButton[Table.ELEMENT_CNT];
+		
+		for (int i = 0; i < goIn.length; i ++ ) {
+			final int index = i;
+			delete[i] = new SmallButton().load(X_1, Y_2 + SmallButton.HEIGHT * (i + 1), new ImageIcon("./icons/delete.png"), e -> delete(index));
+			add(delete[i]);
+			delete[i].setVisible(false);
 		}
 		
 		changeSearchFolderWindow.initforce(() -> {
@@ -154,8 +165,10 @@ public class Window extends JFrame {
 		return this;
 	}
 	
-	
-	
+	private void delete(int i) {
+		throw new UnsupportedOperationException("Not yet implemented!");
+	}
+
 	private void save() {
 		new SaveWindow().load(this);
 	}
@@ -194,6 +207,7 @@ public class Window extends JFrame {
 				}
 				break;
 			}
+			delete[i].setVisible(true);
 			GuiInterface e = element[i + index];
 			table.setValueAt(e.getName(), i, Table.NAME);
 			SumInfo sum = e.getSumInfo();
