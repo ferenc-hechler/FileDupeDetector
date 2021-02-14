@@ -9,8 +9,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class ScanStore implements GuiInterface {
 
@@ -38,7 +38,17 @@ public class ScanStore implements GuiInterface {
 		
 	}
 
-	public void visitFiles(BiConsumer<Folder, FileInfo> visitor) {
+	public FileInfo searchFirstFile(Predicate<FileInfo> check) {
+		for (BaseFolder bf:baseFolders) {
+			FileInfo f = bf.searchFirstFile(check);
+			if (f != null) {
+				return f;
+			}
+		}
+		return null;
+	}
+
+	public void visitFiles(Consumer<FileInfo> visitor) {
 		for (BaseFolder bf:baseFolders) {
 			bf.visitFiles(visitor);
 		}

@@ -40,12 +40,13 @@ public class QHashManager {
 		folder2allDupesCompensationBytes = new HashMap<>();
 		final Set<String> hashValues = new HashSet<>(); 
 		final Set<String> duplicateHashValues = new HashSet<>();
-		store.visitFiles((folder, file) -> {
+		store.visitFiles((file) -> {
 			if (!hashValues.add(file.getqHash())) {
 				duplicateHashValues.add(file.getqHash());
 			}
 		});
-		store.visitFiles((folder, file) -> {
+		store.visitFiles((file) -> {
+			Folder folder = ((Folder) file.getParent());
 			if (duplicateHashValues.contains(file.getqHash())) {
 				DupeInfo di = hash2dupeInfoMap.get(file.getqHash());
 				if (di != null) {

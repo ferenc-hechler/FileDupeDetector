@@ -31,6 +31,17 @@ public class SumInfo {
 		}
 	}
 	
+	public void sub(SumInfo other) {
+		this.numFiles -= other.numFiles;
+		this.numFolders -= other.numFolders;
+		this.totalMemory -= other.totalMemory;
+		// TODO: das stimmt so noch nicht. Die Duplikate addieren sich nur, wenn sie nicht identisch sind.
+		this.duplicateMemory -= other.duplicateMemory;  
+		// lastModified can not be changed
+	}
+	
+	
+	
 	public long getNumFiles() {
 		return numFiles;
 	}
@@ -59,5 +70,5 @@ public class SumInfo {
 	public void reduceDuplicates(long duplicationReduction) {
 		duplicateMemory -= duplicationReduction;
 	}
-	
+
 }

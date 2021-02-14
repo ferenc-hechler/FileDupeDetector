@@ -8,6 +8,9 @@ public class DummyGui {
 //		store.write("./out/store.out");
 //		store.read("./out/store.out");
 		showTextGui(store);
+		FileInfo file2delete = store.searchFirstFile((fi) -> fi.getName().equals("ScanStore.java"));
+		file2delete.delete();
+		showTextGui(store);
 	}
 
 	private static void showTextGui(GuiInterface root) {

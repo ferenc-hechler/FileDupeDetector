@@ -50,7 +50,7 @@ public class DupeDetector {
 				System.out.println("Time: "+(0.001*delay)+"s");
 	
 				int[] cnt = new int[2];
-				store.visitFiles((folder, file) -> cnt[0]++);
+				store.visitFiles((file) -> cnt[0]++);
 				store.visitFolders(folder -> cnt[1]++);
 				System.out.println("Folders: "+cnt[1]);
 				System.out.println("Files: "+cnt[0]);

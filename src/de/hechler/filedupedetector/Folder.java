@@ -11,8 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class Folder implements GuiInterface {
 
@@ -95,9 +95,24 @@ public class Folder implements GuiInterface {
 		}
 	}
 	
-	public void visitFiles(BiConsumer<Folder, FileInfo> visitor) {
+	public FileInfo searchFirstFile(Predicate<FileInfo> check) {
 		for (FileInfo file:files) {
-			visitor.accept(this, file);
+			if (check.test(file)) {
+				return file;
+			}
+		}
+		for (Folder childFolder:childFolders) {
+			FileInfo result = childFolder.searchFirstFile(check);
+			if (result != null) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	public void visitFiles(Consumer<FileInfo> visitor) {
+		for (FileInfo file:files) {
+			visitor.accept(file);
 		}
 		for (Folder childFolder:childFolders) {
 			childFolder.visitFiles(visitor);
@@ -197,6 +212,20 @@ public class Folder implements GuiInterface {
 			searchOther = searchOther.getParent();
 		}
 		return null;
+	}
+
+	public void removeChild(FileInfo file) {
+		if (files.remove(file)) {
+			// TODO: QHashManager anpassen und beruecksichtigem ab welchen Ordner keine Doublette mehr.
+			Folder updateFolder = this;
+			SumInfo subInfo = file.getSumInfo();
+			while (updateFolder != null) {
+				if (updateFolder.sumInfo != null) {
+					updateFolder.sumInfo.sub(subInfo);
+				}
+				updateFolder = updateFolder.getParent();
+			}
+		}
 	}
 
 }
