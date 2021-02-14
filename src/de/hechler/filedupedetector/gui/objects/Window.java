@@ -165,6 +165,7 @@ public class Window extends JFrame {
 //		int[] del = table.getSelectedRows();
 //		for (int rem : del) {
 //			if (rem == 0) continue;
+//			if (rem >= element.length) continue;
 //			rem += index;
 //			 parent.remove(element[rem]);
 //			if (element[rem].isFile()) {

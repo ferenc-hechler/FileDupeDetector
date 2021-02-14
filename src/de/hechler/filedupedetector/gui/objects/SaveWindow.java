@@ -32,6 +32,7 @@ public class SaveWindow extends JFrame {
 		button.setBounds(10, 10, 15, 15);
 		button.addActionListener(a -> {
 			String file = text.getText();
+			setVisible(false);
 			new Thread( () -> {
 				window.saveTo(file);
 			}).start();
