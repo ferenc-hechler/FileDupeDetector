@@ -56,7 +56,7 @@ public class ChangeSearchFolderWindow extends JFrame {
 		}
 		
 		finish = new JButton();
-		finish.setIcon(new ImageIcon("./icons/changeFinish.png"));
+		finish.setIcon(new ImageIcon("./icons/cuniform.png"));
 		finish.addActionListener(a -> {
 			setVisible(false);
 			run.run();

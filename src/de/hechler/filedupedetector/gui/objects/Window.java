@@ -53,6 +53,7 @@ public class Window extends JFrame {
 	private MenuButton changeSearchFolderButton;
 	private ChangeSearchFolderWindow changeSearchFolderWindow;
 	private MenuButton reload;
+	private MenuButton save;
 	private GoInButton[] goIn;
 	private JButton goOut;
 	private ScanStore scanStore;
@@ -99,6 +100,7 @@ public class Window extends JFrame {
 		
 		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder());
 		reload = new MenuButton().load(X_2, Y_1, new ImageIcon("./icons/reload.png"), a -> reload());
+		save = new MenuButton().load(X_2 + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/save.png"), a -> save());
 		table = new Table().load(X_2, Y_2);
 		up = new ScollButton().load(X_3, Y_3, true, this);
 		down = new ScollButton().load(X_3, Y_2, false, this);
@@ -112,6 +114,7 @@ public class Window extends JFrame {
 		add(table);
 		add(changeSearchFolderButton);
 		add(reload);
+		add(save);
 		
 		goOut.setVisible(false);
 		up.setVisible(false);
@@ -153,6 +156,10 @@ public class Window extends JFrame {
 	
 	
 	
+	private void save() {
+		new SaveWindow().load(this);
+	}
+
 	private void goOut() {
 		StackElement se = stack.remove(stack.size() - 1);
 		element = se.value;
@@ -274,6 +281,10 @@ public class Window extends JFrame {
 		Arrays.parallelSort(element, COMPERATOR);
 		this.index = 0;
 		rebuildTable();
+	}
+
+	public void saveTo(String file) {
+		scanStore.write(file);
 	}
 	
 }
