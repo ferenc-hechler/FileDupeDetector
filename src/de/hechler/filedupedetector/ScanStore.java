@@ -108,6 +108,7 @@ public class ScanStore implements GuiInterface {
 	 * recalculates number of files/folder/memory/duplicates. 
 	 */
 	public SumInfo calcSumInfoFromChildren() {
+		QHashManager.getInstance().clear();
 		QHashManager.getInstance().collectHashDupes(this);
 		QHashManager.getInstance().showStats();
 		sumInfo = new SumInfo();

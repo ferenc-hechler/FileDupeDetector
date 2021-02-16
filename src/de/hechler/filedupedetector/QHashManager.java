@@ -88,5 +88,8 @@ public class QHashManager {
 	public long getDuplicationReduction(Folder folder) {
 		return folder2allDupesCompensationBytes.getOrDefault(folder, 0L);
 	}
+	public void clear() {
+		instance = null;
+	}
 	
 }
