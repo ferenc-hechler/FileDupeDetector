@@ -97,7 +97,7 @@ public class Window extends JFrame {
 		
 		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder());
 		reload = new MenuButton().load(X_2, Y_1, new ImageIcon("./icons/reload.png"), a -> reload());
-		saveIn = new MenuButton().load(X_2 + VOID + MenuButton.SIZE + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/save.png"), a -> saveIn());
+		saveIn = new MenuButton().load(X_2 + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/save.png"), a -> saveIn());
 		delete = new MenuButton().load(X_2 + VOID + MenuButton.SIZE + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/deleteMarked.png"),
 				a -> delete());
 		table = new Table().load(X_2, Y_2);
