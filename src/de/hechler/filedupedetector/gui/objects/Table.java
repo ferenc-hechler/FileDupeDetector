@@ -1,10 +1,11 @@
 package de.hechler.filedupedetector.gui.objects;
 
+import java.util.Arrays;
+import java.util.function.Consumer;
+
 import javax.swing.JTable;
 
 public class Table extends JTable {
-	
-	
 	
 	/** UID */
 	private static final long serialVersionUID = -3773804780193596904L;
@@ -27,23 +28,31 @@ public class Table extends JTable {
 	public static final int COLUMS = 7;
 	
 	
+	private static final boolean USER_ALLOWED_TO_EDIT_TABLE = false;
+	private String[][] table;
 	
 	public Table() {
 		super(ELEMENT_CNT + 1, COLUMS);
 	}
 	
-	@Override
-	public void setValueAt(Object aValue, int row, int column) {
+	public synchronized void setValue(String aValue, int row, int column) {
 		if (row < 0) {
 			throw new IllegalArgumentException("row < 0 | row=" + row);
 		}
+		table[row][column] = aValue;
 		super.setValueAt(aValue, row + 1, column);
 	}
 	
-	public Table load(int x, int y) {// TODO disallow user to edit the table
+	public String valueOf(int row, int column) {
+		return table[row][column];
+	}
+	
+	public synchronized Table load(int x, int y) {
+		table = new String[ELEMENT_CNT][COLUMS];
+		
 		setCellSelectionEnabled(false);
 		setRowSelectionAllowed(true);
-		setEnabled(true);
+		setEnabled(true); // allows user to select rows (and to modify the table)
 		
 		setBounds(x, y, WIDTH, HEIGHT);
 		setRowHeight(ROW_HIGH);
@@ -65,11 +74,58 @@ public class Table extends JTable {
 		setAutoCreateColumnsFromModel(true);
 		setShowGrid(true);
 		
+		new Thread(() -> {
+			while ( !USER_ALLOWED_TO_EDIT_TABLE) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
+				for (int i = 0; i < table.length; i ++ ) {
+					for (int ii = 0; ii < table[i].length; ii ++ ) {
+						if (super.getValueAt(i + 1, ii) != table[i][ii]) {
+							super.setValueAt(table[i][ii], i + 1, ii);
+						}
+					}
+				}
+			}
+		}).start();
+		
 		return this;
 	}
 	
 	public void set() {
 		
+	}
+	
+	@Override
+	public int getSelectedRow() {
+		int select = super.getSelectedRow();
+		if (select == -1) {
+			return select;
+		} else {
+			return select - 1;
+		}
+	}
+	
+	@Override
+	public int[] getSelectedColumns() {
+		int[] selected = super.getSelectedColumns();
+		for (int i = 0; i < selected.length; i ++ ) {
+			if (selected[i] == 0) {
+				int[] zw = Arrays.copyOf(selected, selected.length - 1);
+				System.arraycopy(selected, i + 1, zw, i, zw.length - i);
+				break;
+			}
+		}
+		return selected;
+	}
+	
+	public void forEachSelectedRow(Consumer <? super Integer> action) {
+		int[] sel = super.getSelectedRows();
+		for (int i = 0; i < sel.length; i ++ ) {
+			if (sel[i] == 0) continue;
+			action.accept(sel[i]);
+		}
 	}
 	
 }
