@@ -57,7 +57,7 @@ public class Table extends JTable {
 	}
 	
 	/**
-	 * This will be overridden, when {@link #USER_ALLOWED_TO_EDIT_TABLE} is <code>false</code> (default: <code>false</code>)
+	 * This will be ignored, when {@link #USER_ALLOWED_TO_EDIT_TABLE} is <code>false</code> (default: <code>false</code>)
 	 */
 	@Override
 	@Deprecated
