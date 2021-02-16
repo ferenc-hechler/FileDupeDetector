@@ -7,6 +7,27 @@ import javax.swing.JTable;
 
 public class Table extends JTable {
 	
+	private static final String ART_VAL = "art";
+	
+	
+	private static final String LAST_MODIFIED_VAL = "letzte änderung";
+	
+	
+	private static final String DOPPELT_PROZENT_VAL = "doppelt (%)";
+	
+	
+	private static final String DOPPELT_VAL = "doppelt";
+	
+	
+	private static final String SPEICHER_PLATZ_PROZENT_VAL = "größe (%)";
+	
+	
+	private static final String SPEICHER_PLATZ_VAL = "größe";
+	
+	
+	private static final String NAME_VAL = "name";
+	
+	
 	/** UID */
 	private static final long serialVersionUID = -3773804780193596904L;
 	
@@ -29,10 +50,21 @@ public class Table extends JTable {
 	
 	
 	private static final boolean USER_ALLOWED_TO_EDIT_TABLE = false;
-	private String[][] table;
+	private volatile String[][] table;
 	
 	public Table() {
 		super(ELEMENT_CNT + 1, COLUMS);
+	}
+	
+	/**
+	 * This will be overridden, when {@link #USER_ALLOWED_TO_EDIT_TABLE} is <code>false</code> (default: <code>false</code>)
+	 */
+	@Override
+	@Deprecated
+	public void setValueAt(Object aValue, int row, int column) {
+		if (USER_ALLOWED_TO_EDIT_TABLE) {
+			super.setValueAt(aValue, row, column);
+		}
 	}
 	
 	public synchronized void setValue(String aValue, int row, int column) {
@@ -57,38 +89,22 @@ public class Table extends JTable {
 		setBounds(x, y, WIDTH, HEIGHT);
 		setRowHeight(ROW_HIGH);
 		
-		super.setValueAt("name", 0, NAME);
-		super.setValueAt("größe", 0, SPEICHER_PLATZ);
-		super.setValueAt("größe (%)", 0, SPEICHER_PLATZ_PROZENT);
-		super.setValueAt("doppelt", 0, DOPPELT);
-		super.setValueAt("doppelt (%)", 0, DOPPELT_PROZENT);
-		super.setValueAt("letzte änderung", 0, LAST_MODIFIED);
-		super.setValueAt("art", 0, ART);
+		super.setValueAt(NAME_VAL, 0, NAME);
+		super.setValueAt(SPEICHER_PLATZ_VAL, 0, SPEICHER_PLATZ);
+		super.setValueAt(SPEICHER_PLATZ_PROZENT_VAL, 0, SPEICHER_PLATZ_PROZENT);
+		super.setValueAt(DOPPELT_VAL, 0, DOPPELT);
+		super.setValueAt(DOPPELT_PROZENT_VAL, 0, DOPPELT_PROZENT);
+		super.setValueAt(LAST_MODIFIED_VAL, 0, LAST_MODIFIED);
+		super.setValueAt(ART_VAL, 0, ART);
 		
 		for (int i = 0; i < ELEMENT_CNT; i ++ ) {
 			for (int ii = 0; ii < COLUMS; ii ++ ) {
-				setValueAt("", i, ii);
+				setValue("", i, ii);
 			}
 		}
 		
 		setAutoCreateColumnsFromModel(true);
 		setShowGrid(true);
-		
-		new Thread(() -> {
-			while ( !USER_ALLOWED_TO_EDIT_TABLE) {
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-				}
-				for (int i = 0; i < table.length; i ++ ) {
-					for (int ii = 0; ii < table[i].length; ii ++ ) {
-						if (super.getValueAt(i + 1, ii) != table[i][ii]) {
-							super.setValueAt(table[i][ii], i + 1, ii);
-						}
-					}
-				}
-			}
-		}).start();
 		
 		return this;
 	}

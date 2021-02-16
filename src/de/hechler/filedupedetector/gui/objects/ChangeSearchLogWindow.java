@@ -16,6 +16,7 @@ public class ChangeSearchLogWindow extends JFrame {
 	public ChangeSearchLogWindow load() {
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		setLayout(null);
+		setLocationRelativeTo(null);
 		
 		text = new JTextField("working");
 		setBounds(0, 0, 50, 100);
@@ -23,6 +24,7 @@ public class ChangeSearchLogWindow extends JFrame {
 		add(text);
 		
 		setVisible(true);
+		toFront();
 		return this;
 	}
 	
