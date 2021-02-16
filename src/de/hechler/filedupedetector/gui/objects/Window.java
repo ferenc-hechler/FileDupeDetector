@@ -49,9 +49,9 @@ public class Window extends JFrame {
 	private MenuButton changeSearchFolderButton;
 	private ChangeSearchFolderWindow changeSearchFolderWindow;
 	private MenuButton reload;
-	private MenuButton save;
-	private SmallButton[] goIn;
+	private MenuButton saveIn;
 	private MenuButton delete;
+	private SmallButton[] goIn;
 	private JButton goOut;
 	private ScanStore scanStore;
 	private List <StackElement> stack;
@@ -61,6 +61,7 @@ public class Window extends JFrame {
 	private List <String> read;
 	private volatile boolean blocked = false;
 	private GuiInterface parent;
+	
 	
 	private class StackElement {
 		
@@ -96,7 +97,9 @@ public class Window extends JFrame {
 		
 		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder());
 		reload = new MenuButton().load(X_2, Y_1, new ImageIcon("./icons/reload.png"), a -> reload());
-		save = new MenuButton().load(X_2 + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/save.png"), a -> save());
+		saveIn = new MenuButton().load(X_2 + VOID + MenuButton.SIZE + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/save.png"), a -> saveIn());
+		delete = new MenuButton().load(X_2 + VOID + MenuButton.SIZE + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/deleteMarked.png"),
+				a -> delete());
 		table = new Table().load(X_2, Y_2);
 		up = new ScollButton().load(X_3, Y_3, true, this);
 		down = new ScollButton().load(X_3, Y_2, false, this);
@@ -104,15 +107,14 @@ public class Window extends JFrame {
 		goOut.setIcon(new ImageIcon("./icons/goOut.png"));
 		goOut.addActionListener(a -> goOut());
 		goOut.setBounds(X_1, Y_2, 50, 15);
-		delete = new MenuButton().load(X_2 + VOID + MenuButton.SIZE + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/deleteMarked.png"), a -> delete());
-		add(delete);
 		add(goOut);
 		add(down);
 		add(up);
 		add(table);
-		add(changeSearchFolderButton);
+		add(delete);
+		add(saveIn);
 		add(reload);
-		add(save);
+		add(changeSearchFolderButton);
 		
 		goOut.setVisible(false);
 		up.setVisible(false);
@@ -156,7 +158,7 @@ public class Window extends JFrame {
 	private void delete() {
 		if (blocked) return;
 		blocked = true;
-		table.forEachSelectedRow( (rem) -> {
+		table.forEachSelectedRow((rem) -> {
 			if (rem >= element.length) return;
 			rem += index - 1;
 			element[rem].delete();
@@ -168,7 +170,7 @@ public class Window extends JFrame {
 		blocked = false;
 	}
 	
-	private void save() {
+	private void saveIn() {
 		new SaveWindow().load(this);
 	}
 	

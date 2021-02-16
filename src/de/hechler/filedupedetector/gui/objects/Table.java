@@ -75,7 +75,7 @@ public class Table extends JTable {
 		super.setValueAt(aValue, row + 1, column);
 	}
 	
-	public String valueOf(int row, int column) {
+	public synchronized String valueOf(int row, int column) {
 		return table[row][column];
 	}
 	
