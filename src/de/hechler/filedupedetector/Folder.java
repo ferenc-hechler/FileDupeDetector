@@ -22,12 +22,16 @@ public class Folder implements GuiInterface {
 	protected List<Folder> childFolders;
 	private SumInfo sumInfo;
 	
+	private boolean deactivated;
+	
+	
 	public Folder(Folder parent, String foldername) {
 		this.parent = parent;
 		this.foldername = foldername;
 		this.files = new ArrayList<>();
 		this.childFolders = new ArrayList<>();
 		this.sumInfo = null;
+		this.deactivated = false;
 	}
 
 	public void readFolderContent() {
@@ -54,9 +58,15 @@ public class Folder implements GuiInterface {
 		readFolderContent();
 		Path path = getPath();
 		for (FileInfo file:files) {
+			if (file.isDeactivated()) {
+				continue;
+			}
 			file.calcQHash(path);
 		}
 		for (Folder folder:childFolders) {
+			if (folder.isDeactivated()) {
+				continue;
+			}
 			folder.readRecursiveFolderContent();
 		}
 	}
@@ -73,11 +83,17 @@ public class Folder implements GuiInterface {
 		if (isVolume() || (files.size() > 0)) {
 			out.println("FOLDER "+getPath().toString().substring(2));
 			for (FileInfo file:files) {
+				if (file.isDeactivated()) {
+					continue;
+				}
 				file.write(out);
 			}
 			out.println();
 		}
 		for (Folder childFolder:childFolders) {
+			if (childFolder.isDeactivated()) {
+				continue;
+			}
 			childFolder.write(out);
 		}
 	}
@@ -97,11 +113,17 @@ public class Folder implements GuiInterface {
 	
 	public FileInfo searchFirstFile(Predicate<FileInfo> check) {
 		for (FileInfo file:files) {
+			if (file.isDeactivated()) {
+				continue;
+			}
 			if (check.test(file)) {
 				return file;
 			}
 		}
 		for (Folder childFolder:childFolders) {
+			if (childFolder.isDeactivated()) {
+				continue;
+			}
 			FileInfo result = childFolder.searchFirstFile(check);
 			if (result != null) {
 				return result;
@@ -112,23 +134,41 @@ public class Folder implements GuiInterface {
 
 	public void visitFiles(Consumer<FileInfo> visitor) {
 		for (FileInfo file:files) {
+			if (file.isDeactivated()) {
+				continue;
+			}
 			visitor.accept(file);
 		}
 		for (Folder childFolder:childFolders) {
+			if (childFolder.isDeactivated()) {
+				continue;
+			}
 			childFolder.visitFiles(visitor);
+		}
+	}
+
+	public void visitAllFiles(Consumer<FileInfo> visitor) {
+		for (FileInfo file:files) {
+			visitor.accept(file);
+		}
+		for (Folder childFolder:childFolders) {
+			childFolder.visitAllFiles(visitor);
 		}
 	}
 
 	public void visitFolders(Consumer<Folder> visitor) {
 		visitor.accept(this);
 		for (Folder childFolder:childFolders) {
+			if (childFolder.isDeactivated()) {
+				continue;
+			}
 			childFolder.visitFolders(visitor);
 		}
 	}
 
 	public Folder findChildFolder(String foldername) {
 		// optimization: use Map for folders with many childfolders.
-		Optional<Folder> result = childFolders.stream().filter(f -> f.foldername.equals(foldername)).findAny();
+		Optional<Folder> result = childFolders.stream().filter(f -> (!f.isDeactivated()) && f.foldername.equals(foldername)).findAny();
 		if (result.isPresent()) {
 			return result.get();
 		}
@@ -139,9 +179,14 @@ public class Folder implements GuiInterface {
 	public SumInfo calcSumInfoFromChildren() {
 		sumInfo = new SumInfo();
 		for (Folder childFolder:childFolders) {
+			// do not check for deactivated folders, this is calculated afterwards.
+			// folders with 0 files (recursive) are deactivated.
 			sumInfo.add(childFolder.calcSumInfoFromChildren());
 		}
 		for (FileInfo file:files) {
+			if (file.isDeactivated()) {
+				continue;
+			}
 			sumInfo.add(file.getSumInfo());
 		}
 		sumInfo.addNumFolders(1);
@@ -174,14 +219,26 @@ public class Folder implements GuiInterface {
 		return sumInfo;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override public List<GuiInterface> getChildFolders() {
-		return (List)childFolders;
+		List<GuiInterface> result = new ArrayList<>();
+		for (Folder childFolder:childFolders) {
+			if (childFolder.isDeactivated()) {
+				continue;
+			}
+			result.add(childFolder);
+		}
+		return result;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override public List<GuiInterface> getChildFiles() {
-		return (List)files;
+		List<GuiInterface> result = new ArrayList<>();
+		for (FileInfo file:files) {
+			if (file.isDeactivated()) {
+				continue;
+			}
+			result.add(file);
+		}
+		return result;
 	}
 
 	@Override public void delete() {
@@ -226,6 +283,13 @@ public class Folder implements GuiInterface {
 				updateFolder = updateFolder.getParent();
 			}
 		}
+	}
+
+	public void setDeactivated(boolean newValue) {
+		this.deactivated = newValue;
+	}
+	public boolean isDeactivated() {
+		return deactivated;
 	}
 
 }

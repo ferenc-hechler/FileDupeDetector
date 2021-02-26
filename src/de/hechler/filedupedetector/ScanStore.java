@@ -9,8 +9,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+
+import de.hechler.filedupedetector.tools.ExtensionInfo;
 
 public class ScanStore implements GuiInterface {
 
@@ -51,6 +54,12 @@ public class ScanStore implements GuiInterface {
 	public void visitFiles(Consumer<FileInfo> visitor) {
 		for (BaseFolder bf:baseFolders) {
 			bf.visitFiles(visitor);
+		}
+	}
+
+	public void visitAllFiles(Consumer<FileInfo> visitor) {
+		for (BaseFolder bf:baseFolders) {
+			bf.visitAllFiles(visitor);
 		}
 	}
 
@@ -131,6 +140,24 @@ public class ScanStore implements GuiInterface {
 		return sumInfo;
 	}
 
+	public void filterCategories(String filteredCategoriesAsString) {
+		List<String> categories = new ArrayList<>();
+		for (int i=0; i<filteredCategoriesAsString.length(); i++) {
+			categories.add(filteredCategoriesAsString.substring(i, i+1));
+		}
+		final Set<String> filteredExtensions = ExtensionInfo.getInstance().getExts(categories);
+		filter(fileInfo -> filteredExtensions.contains(fileInfo.getExtension()));
+	}
+	
+	public void filter(Predicate<FileInfo> check) {
+		System.out.println("filtering");
+		visitAllFiles(file -> file.setDeactivated(!check.test(file)));
+		System.out.println("calculating");
+		calcSumInfoFromChildren();
+		visitFolders(folder -> folder.setDeactivated(folder.getSumInfo().getNumFiles() == 0));
+		System.out.println("files " + sumInfo.getNumFiles()+" - netto "+Utils.readableBytes(sumInfo.getTotalMemory()-sumInfo.getDuplicateMemory()) + " - total "+Utils.readableBytes(sumInfo.getTotalMemory()));
+	}
+	
 	@Override public boolean isFolder() { return true; }
 	@Override public boolean isFile() { return false; }
 	@Override public boolean isVolume() { return false; }

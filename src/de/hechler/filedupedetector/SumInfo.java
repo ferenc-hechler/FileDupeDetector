@@ -24,7 +24,6 @@ public class SumInfo {
 		this.numFiles += other.numFiles;
 		this.numFolders += other.numFolders;
 		this.totalMemory += other.totalMemory;
-		// TODO: das stimmt so noch nicht. Die Duplikate addieren sich nur, wenn sie nicht identisch sind.
 		this.duplicateMemory += other.duplicateMemory;  
 		if (lastModified < other.lastModified) {
 			lastModified = other.lastModified;
@@ -35,7 +34,6 @@ public class SumInfo {
 		this.numFiles -= other.numFiles;
 		this.numFolders -= other.numFolders;
 		this.totalMemory -= other.totalMemory;
-		// TODO: das stimmt so noch nicht. Die Duplikate addieren sich nur, wenn sie nicht identisch sind.
 		this.duplicateMemory -= other.duplicateMemory;  
 		// lastModified can not be changed
 	}

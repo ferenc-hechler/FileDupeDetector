@@ -41,6 +41,9 @@ public class FileInfo implements GuiInterface {
 	private long filesize;
 	private long lastModified;
 	private String qHash;
+	
+	private boolean deactivated;
+	
 
 	public FileInfo(Folder parent, Path file) {
 		try {
@@ -49,6 +52,7 @@ public class FileInfo implements GuiInterface {
 			lastModified = Files.getLastModifiedTime(file).toMillis();
 			filesize = Files.size(file);
 			qHash = "-";
+			deactivated = false;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -60,6 +64,7 @@ public class FileInfo implements GuiInterface {
 		this.filesize = filesize;
 		this.lastModified = lastModified;
 		this.qHash = qHash;
+		this.deactivated = false;
 	}
 
 	public String calcQHash(Path folder) {
@@ -249,5 +254,20 @@ public class FileInfo implements GuiInterface {
 		parent.removeChild(this);
 	}
 
+	public void setDeactivated(boolean newValue) {
+		this.deactivated = newValue;
+	}
+
+	public boolean isDeactivated() {
+		return deactivated;
+	}
+
+	public String getExtension() {
+		int pos = filename.lastIndexOf('.');
+		if (pos == -1) {
+			return "";
+		}
+		return filename.substring(pos+1);
+	}
 	
 }
