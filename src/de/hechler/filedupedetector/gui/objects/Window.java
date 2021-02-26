@@ -19,54 +19,55 @@ public class Window extends JFrame {
 	/** UID */
 	private static final long serialVersionUID = 6510610980424957351L;
 	
-	private static final int WIDTH = 910;
+	private static final int WIDTH  = 910;
 	private static final int HEIGHT = 660;
 	
-	public static final int VOID = 10;
-	private static final int X_1 = VOID;
-	private static final int X_2 = X_1 + VOID + MenuButton.SIZE;
-	private static final int X_3 = X_2 + VOID + Table.WIDTH;
-	private static final int Y_1 = VOID;
-	private static final int Y_2 = Y_1 + VOID + MenuButton.SIZE;
-	private static final int Y_3 = Y_2 + VOID + ScollButton.HEIGHT;
+	public static final int                        VOID       = 10;
+	private static final int                       X_1        = VOID;
+	private static final int                       X_2        = X_1 + VOID + MenuButton.SIZE;
+	private static final int                       X_3        = X_2 + VOID + Table.WIDTH;
+	private static final int                       Y_1        = VOID;
+	private static final int                       Y_2        = Y_1 + VOID + MenuButton.SIZE;
+	private static final int                       Y_3        = Y_2 + VOID + ScollButton.HEIGHT;
 	private static final Comparator <GuiInterface> COMPERATOR = (a, b) -> {
-		SumInfo sumA = a.getSumInfo();
-		if (sumA == null) {
-			a.refreshSumInfo();
-			sumA = a.getSumInfo();
-		}
-		SumInfo sumB = b.getSumInfo();
-		if (sumB == null) {
-			b.refreshSumInfo();
-			sumB = b.getSumInfo();
-		}
-		return Long.compare(sumB.getTotalMemory(), sumA.getTotalMemory());
-	};
+																	SumInfo sumA = a.getSumInfo();
+																	if (sumA == null) {
+																		a.refreshSumInfo();
+																		sumA = a.getSumInfo();
+																	}
+																	SumInfo sumB = b.getSumInfo();
+																	if (sumB == null) {
+																		b.refreshSumInfo();
+																		sumB = b.getSumInfo();
+																	}
+																	return Long.compare(sumB.getTotalMemory(), sumA.getTotalMemory());
+																};
 	
-	private Table table;
-	private ScollButton up;
-	private ScollButton down;
-	private MenuButton changeSearchFolderButton;
+	private Table                    table;
+	private ScollButton              up;
+	private ScollButton              down;
+	private MenuButton               changeSearchFolderButton;
 	private ChangeSearchFolderWindow changeSearchFolderWindow;
-	private MenuButton reload;
-	private MenuButton saveIn;
-	private MenuButton delete;
-	private SmallButton[] goIn;
-	private JButton goOut;
-	private ScanStore scanStore;
-	private List <StackElement> stack;
-	private GuiInterface[] element;
-	private int index;
-	private List <String> search;
-	private List <String> read;
-	private volatile boolean blocked = false;
-	private GuiInterface parent;
+	private MenuButton               reload;
+	private MenuButton               saveIn;
+	private MenuButton               delete;
+	private SmallButton[]            goIn;
+	private JButton                  goOut;
+	private ScanStore                scanStore;
+	private List <StackElement>      stack;
+	private GuiInterface[]           element;
+	private int                      index;
+	private List <String>            search;
+	private List <String>            read;
+	private volatile boolean         blocked = false;
+	private GuiInterface             parent;
+	private String                   filter;
 	
 	
 	private class StackElement {
 		
 		GuiInterface[] value;
-		GuiInterface parent;
+		GuiInterface   parent;
 		
 		public StackElement(GuiInterface[] value, GuiInterface parent) {
 			StackElement.this.value = value;
@@ -98,8 +99,7 @@ public class Window extends JFrame {
 		changeSearchFolderButton = new MenuButton().load(X_1, Y_1, new ImageIcon("./icons/changeSearchFolder.png"), a -> changeSearchFolder());
 		reload = new MenuButton().load(X_2, Y_1, new ImageIcon("./icons/reload.png"), a -> reload());
 		saveIn = new MenuButton().load(X_2 + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/save.png"), a -> saveIn());
-		delete = new MenuButton().load(X_2 + VOID + MenuButton.SIZE + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/deleteMarked.png"),
-				a -> delete());
+		delete = new MenuButton().load(X_2 + VOID + MenuButton.SIZE + VOID + MenuButton.SIZE, Y_1, new ImageIcon("./icons/deleteMarked.png"), a -> delete());
 		table = new Table().load(X_2, Y_2);
 		up = new ScollButton().load(X_3, Y_3, true, this);
 		down = new ScollButton().load(X_3, Y_2, false, this);
@@ -129,7 +129,7 @@ public class Window extends JFrame {
 			goIn[i].setVisible(false);
 		}
 		
-		changeSearchFolderWindow.initforce(() -> {
+		changeSearchFolderWindow.initforce((filter) -> {
 			new Thread(() -> {
 				read = changeSearchFolderWindow.getRead();
 				search = changeSearchFolderWindow.getSearch();
@@ -138,6 +138,10 @@ public class Window extends JFrame {
 				}
 				for (String zw : search) {
 					scanStore.scanFolder(zw);
+				}
+				this.filter = filter;
+				if ( !"".equals(filter)) {
+					scanStore.filterCategories(filter);
 				}
 				stack = new ArrayList <>();
 				index = 0;
@@ -258,6 +262,9 @@ public class Window extends JFrame {
 			for (String zw : search) {
 				scanStore.scanFolder(zw);
 			}
+			if ( !"".equals(filter)) {
+				scanStore.filterCategories(filter);
+			}
 			scanStore.calcSumInfoFromChildren();
 			index = 0;
 			stack = new ArrayList <>();
@@ -275,7 +282,7 @@ public class Window extends JFrame {
 		if (blocked) return;
 		blocked = true;
 		scanStore = new ScanStore();
-		changeSearchFolderWindow.init(() -> {
+		changeSearchFolderWindow.init((filter) -> {
 			new Thread(() -> {
 				ChangeSearchLogWindow log = new ChangeSearchLogWindow().load();
 				read = changeSearchFolderWindow.getRead();
@@ -285,6 +292,10 @@ public class Window extends JFrame {
 				}
 				for (String zw : search) {
 					scanStore.scanFolder(zw);
+				}
+				this.filter = filter;
+				if ( !"".equals(filter)) {
+					scanStore.filterCategories(filter);
 				}
 				stack = new ArrayList <>();
 				index = 0;

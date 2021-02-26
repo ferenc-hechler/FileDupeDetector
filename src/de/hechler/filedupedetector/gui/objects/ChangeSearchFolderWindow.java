@@ -7,6 +7,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 
 public class ChangeSearchFolderWindow extends JFrame {
 	
@@ -15,21 +16,28 @@ public class ChangeSearchFolderWindow extends JFrame {
 	/** UID */
 	private static final long serialVersionUID = 1610025833505675074L;
 	
-	private static final int WIDTH = 420;
+	private static final int WIDTH = 480;
 	private static final int HEIGHT = 90;
 	
 	
 	
+	private JTextField filter;
 	private JTable table;
 	private JButton finish;
 	private JButton exit;
-	private volatile Runnable run;
+	private volatile Initilizer init;
 	private volatile Runnable kill;
 	
 	
 	
 	public ChangeSearchFolderWindow() {
 		super("ChangeSearchFolder");
+	}
+	
+	public interface Initilizer {
+		
+		void init(String filter);
+		
 	}
 	
 	public ChangeSearchFolderWindow load() {
@@ -59,7 +67,11 @@ public class ChangeSearchFolderWindow extends JFrame {
 		finish.setIcon(new ImageIcon("./icons/cuniform.png"));
 		finish.addActionListener(a -> {
 			setVisible(false);
-			run.run();
+			String f = filter.getText();
+			if ("enter filter".equals(f)) {
+				f = "";
+			}
+			init.init(f);
 		});
 		finish.setBounds(50, 10, 30, 30);
 		add(finish);
@@ -71,12 +83,15 @@ public class ChangeSearchFolderWindow extends JFrame {
 		});
 		exit.setBounds(10, 10, 30, 30);
 		add(exit);
+		filter = new JTextField("enter filter");
+		filter.setBounds(400, 10, 70, 20);
+		add(filter);
 		
 		return this;
 	}
 	
-	public void initforce(Runnable run) {
-		this.run = run;
+	public void initforce(Initilizer init) {
+		this.init = init;
 		
 		exit.setEnabled(false);
 		
@@ -86,8 +101,8 @@ public class ChangeSearchFolderWindow extends JFrame {
 		repaint();
 	}
 	
-	public void init(Runnable run, Runnable back) {
-		this.run = run;
+	public void init(Initilizer init, Runnable back) {
+		this.init = init;
 		this.kill = back;
 		
 		exit.setEnabled(true);
