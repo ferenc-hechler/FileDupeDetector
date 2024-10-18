@@ -1,0 +1,37 @@
+----- BASEFOLDER C:\Users\feri\git\FileDupeDetector\in\testdir -----
+VOLUME C||5a4f-5eb5|NTFS|498459303936
+FOLDER \Users\feri\git\FileDupeDetector\in\testdir
+877149408c8007a07781c9eaa4d114e55b5ab7e5d12cdf594256e2b4e61565a2|back.png|799|2024-10-18 19_43_36
+50065593c63b19ae1ec53eaca5b4c15f40781cc338cb03fcab5b5af1f3e715b8|changeSearchFolder.png|1319|2024-10-18 19_43_36
+c141f0232745be03fe97ce70f076bb2116716a8920c3fc39c63281eb8da958c5|cuniform.png|619|2024-10-18 19_43_36
+d9233a94505406f8c0fd42dd51e934df7edbf78e9b33cd4f8f99a881ce4cafa5|deleteMarked.png|409|2024-10-18 19_43_36
+
+FOLDER \Users\feri\git\FileDupeDetector\in\testdir\mix
+877149408c8007a07781c9eaa4d114e55b5ab7e5d12cdf594256e2b4e61565a2|back.png|799|2024-10-18 19_43_36
+
+FOLDER \Users\feri\git\FileDupeDetector\in\testdir\mix\duplicates
+ec38d8de2f3f717d3920853ec3e69cd1c72bb06f73700040f4344075fc093c50|reload.png|2068|2024-10-18 19_43_36
+9765bcf2c745fc77575d3edde25bdf8ed049ba2dca2a28b22e5eaeb794564dbc|scollButtonDown.png|6140|2024-10-18 19_43_36
+9fc831a52e835e3975d066c1332ec14c0dd950849e5c92e90b3390bd886049ef|scollButtonUp.png|6244|2024-10-18 19_43_36
+
+FOLDER \Users\feri\git\FileDupeDetector\in\testdir\mix\duplicates\p1
+7646badc441b73744b8d1b8193f41d7393330cdde6207b3d7ee5f2b07a2a2edd|goIn.png|547|2024-10-18 19_43_36
+
+FOLDER \Users\feri\git\FileDupeDetector\in\testdir\mix\duplicates\root
+877149408c8007a07781c9eaa4d114e55b5ab7e5d12cdf594256e2b4e61565a2|back.png|799|2024-10-18 19_43_36
+
+FOLDER \Users\feri\git\FileDupeDetector\in\testdir\prj1
+d3214d9b3c12e2dac7a853403659faac4a307b55c7a34a8168b5caae4b4917b0|errorExpand.png|253|2024-10-18 19_43_36
+7646badc441b73744b8d1b8193f41d7393330cdde6207b3d7ee5f2b07a2a2edd|goIn.png|547|2024-10-18 19_43_36
+914bf2c2628583655d6ae548225cce0552c9192d8dca40fb8a7a4a74ab37cd88|goOut.png|557|2024-10-18 19_43_36
+ec38d8de2f3f717d3920853ec3e69cd1c72bb06f73700040f4344075fc093c50|reload.png|2068|2024-10-18 19_43_36
+
+FOLDER \Users\feri\git\FileDupeDetector\in\testdir\prj2\iconsA
+ec38d8de2f3f717d3920853ec3e69cd1c72bb06f73700040f4344075fc093c50|reload.png|2068|2024-10-18 19_43_36
+bf46e475d8a231aa86fe0492d8d9738f42fc61165d16e8ad2ab19aaee4aa761b|save.png|254|2024-10-18 19_43_36
+
+FOLDER \Users\feri\git\FileDupeDetector\in\testdir\prj2\iconsB
+9765bcf2c745fc77575d3edde25bdf8ed049ba2dca2a28b22e5eaeb794564dbc|scollButtonDown.png|6140|2024-10-18 19_43_36
+9fc831a52e835e3975d066c1332ec14c0dd950849e5c92e90b3390bd886049ef|scollButtonUp.png|6244|2024-10-18 19_43_36
+
+

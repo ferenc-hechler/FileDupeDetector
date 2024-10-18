@@ -4,11 +4,11 @@ public class DummyGui {
 	
 	public static void main(String[] args) {
 		ScanStore store = new ScanStore();
-		store.scanFolder("./out/testdir");
-//		store.write("./out/store.out");
-//		store.read("./out/store.out");
+		store.scanFolder("./in/testdir");
+//		store.write("./in/store.out");
+//		store.read("./in/store.out");
 		showTextGui(store);
-		FileInfo file2delete = store.searchFirstFile((fi) -> fi.getName().equals("ScanStore.java"));
+		FileInfo file2delete = store.searchFirstFile((fi) -> fi.getName().equals("goIn.png"));
 		file2delete.delete();
 		showTextGui(store);
 	}
