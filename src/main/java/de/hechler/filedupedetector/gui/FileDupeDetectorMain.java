@@ -1,9 +1,16 @@
 package de.hechler.filedupedetector.gui;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
+import de.hechler.filedupedetector.BaseFolder;
+import de.hechler.filedupedetector.FileInfo;
+import de.hechler.filedupedetector.Folder;
+import de.hechler.filedupedetector.GuiInterface;
+import de.hechler.filedupedetector.ScanStore;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.LongProperty;
@@ -73,6 +80,7 @@ public class FileDupeDetectorMain extends Application {
     Color blue; 
     Color black; 
     
+    private ScanStore store;
 	
 	public FileDupeDetectorMain(String title) {
 		this.title = title;
@@ -82,6 +90,10 @@ public class FileDupeDetectorMain extends Application {
 		this.offsetZ = 0.0;
 		this.radiusScale = 2.0;
 		initColors();
+		store = new ScanStore();
+		store.scanFolder("./in/testdir");
+//		store.write("./in/store.out");
+//		store.read("./in/store.out");
 		open();
 	}
 
@@ -111,8 +123,7 @@ public class FileDupeDetectorMain extends Application {
             if (childrenLoaded) {
                 return getChildren().isEmpty() ;
             }
-            return false ;
-//          return getChildren().isEmpty();
+            return (getValue().guiInterface != null) && getValue().guiInterface.isFile();
         }
 
         @Override
@@ -120,15 +131,24 @@ public class FileDupeDetectorMain extends Application {
             if (childrenLoaded) {
                 return super.getChildren();
             }
-
             childrenLoaded = true ;
-            if (getValue().getName().length() < 20) {
-                List<TreeItem<Item>> children = new ArrayList<>();
-                for (int i = 1 ; i <= 5; i++) {
-                    children.add(new ItemTreeNode(new Item(getValue().getName() + i, i*1024, "0"+(i+1)+"01.01.2000", "sha1")));
+
+            List<TreeItem<Item>> children = new ArrayList<>();
+            GuiInterface guiInterface = getValue().guiInterface;
+            if ((guiInterface != null) && guiInterface.isFolder()) {
+            	List<GuiInterface> childFolders = guiInterface.getChildFolders();
+                for (GuiInterface childFolder:childFolders) {
+                    children.add(new ItemTreeNode(new Item(childFolder)));
                 }
-                super.getChildren().addAll(children);
-            } else {
+            	List<GuiInterface> childFiles = guiInterface.getChildFiles();
+                for (GuiInterface childFile:childFiles) {
+                    children.add(new ItemTreeNode(new Item(childFile)));
+                }
+            }
+            if (!children.isEmpty()) {
+            	super.getChildren().addAll(children);
+            }
+            else {
                 // great big hack:
                 super.getChildren().add(null);
                 super.getChildren().clear();
@@ -138,16 +158,43 @@ public class FileDupeDetectorMain extends Application {
     }
 
     public static class Item {
+    	static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	
+    	GuiInterface guiInterface;
         private StringProperty name = new SimpleStringProperty();
         private LongProperty size = new SimpleLongProperty();
         private StringProperty lastModified = new SimpleStringProperty();
-        private StringProperty sha1 = new SimpleStringProperty();
+        private StringProperty hash = new SimpleStringProperty();
 
-        public Item(String name, long size, String lastModified, String sha1) {
+        public Item(GuiInterface guiInterface) {
+        	this.guiInterface = guiInterface;
+        	if (guiInterface.isFile()) {
+        		FileInfo fi = (FileInfo) guiInterface;
+                setName(fi.getName());
+                setSize(fi.getFilesize());
+                setLastModified(long2datetimestring(fi.getLastModified()));
+                setHash(fi.getqHash());
+        	}
+        	else {
+        		Folder folder = (Folder) guiInterface;
+                setName(folder.getName()+"/");
+                setSize(0);
+                setLastModified("");
+                setHash("");
+        	}
+        }
+
+        static String long2datetimestring(long millis) {
+        	Date date = new Date(millis);
+        	return sdf.format(date);
+        }
+        
+        public Item(GuiInterface guiInterface, String name, long size, String lastModified, String hash) {
+        	this.guiInterface = guiInterface;
             setName(name);
             setSize(size);
             setLastModified(lastModified);
-            setSha1(sha1);
+            setHash(hash);
         }
 
         public final LongProperty sizeProperty() {
@@ -186,16 +233,16 @@ public class FileDupeDetectorMain extends Application {
             this.lastModifiedProperty().set(lastModified);
         }
 
-        public final StringProperty sha1Property() {
-            return this.sha1;
+        public final StringProperty hashProperty() {
+            return this.hash;
         }
 
-        public final java.lang.String getSha1() {
-            return this.sha1Property().get();
+        public final java.lang.String getHash() {
+            return this.hashProperty().get();
         }
 
-        public final void setSha1(final java.lang.String sha1) {
-            this.sha1Property().set(sha1);
+        public final void setHash(final java.lang.String hash) {
+            this.hashProperty().set(hash);
         }
 
     }
@@ -271,7 +318,7 @@ public class FileDupeDetectorMain extends Application {
 
         TreeTableColumn<Item, String> nameCol = new TreeTableColumn<>("Name");
         nameCol.setCellValueFactory(cellData -> cellData.getValue().getValue().nameProperty());
-        nameCol.setPrefWidth(250);
+        nameCol.setPrefWidth(300);
 
         // from: https://stackoverflow.com/questions/36917220/javafx-treetableview-leaves-icons-behind-when-collapsing
         // cell factory to display graphic:
@@ -280,27 +327,39 @@ public class FileDupeDetectorMain extends Application {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty ? null : item);
-                setGraphic(empty ? null : newFolderIcon());
+                if ((item!=null) && item.endsWith("/")) {
+	                setText(empty ? null : item.substring(0, item.length()-1));
+	                setGraphic(empty ? null : newFolderIcon());
+                }
+                else {
+	                setText(empty ? null : item);
+	                setGraphic(empty ? null : newFileIcon());
+                }
             }
         });
         
         TreeTableColumn<Item, Number> sizeCol = new TreeTableColumn<>("Size");
         sizeCol.setCellValueFactory(cellData -> cellData.getValue().getValue().sizeProperty());
-        sizeCol.setPrefWidth(150);
+        sizeCol.setStyle("-fx-alignment: CENTER-RIGHT;");
+        sizeCol.setPrefWidth(100);
 
         TreeTableColumn<Item, String> lastModifiedCol = new TreeTableColumn<>("Last Modified");
         lastModifiedCol.setCellValueFactory(cellData -> cellData.getValue().getValue().lastModifiedProperty());
-        lastModifiedCol.setPrefWidth(100);
+        lastModifiedCol.setPrefWidth(125);
 
-        TreeTableColumn<Item, String> sha1Col = new TreeTableColumn<>("SHA1");
-        sha1Col.setCellValueFactory(cellData -> cellData.getValue().getValue().sha1Property());
-        sha1Col.setPrefWidth(100);
+        TreeTableColumn<Item, String> hashCol = new TreeTableColumn<>("SHA256");
+        hashCol.setCellValueFactory(cellData -> cellData.getValue().getValue().hashProperty());
+        hashCol.setPrefWidth(420);
 
-        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, lastModifiedCol, sha1Col));
+        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, lastModifiedCol, hashCol));
 
-        tree.setRoot(new ItemTreeNode(new Item("root-folder", 0, "", "")));
-
+        ItemTreeNode rootNode = new ItemTreeNode(new Item(null, "root", 0, "", "")); 
+        tree.setRoot(rootNode);
+        tree.setShowRoot(false);
+        List<BaseFolder> baseFolders = store.getBaseFolders();
+        for (BaseFolder bf:baseFolders) {
+        	rootNode.getChildren().add(new ItemTreeNode(new Item(bf)));
+        }
 		
 //		TreeItem<String> treeItem = new TreeItem<String> ("Inbox", newFolderIcon());
 //        treeItem.setExpanded(true);

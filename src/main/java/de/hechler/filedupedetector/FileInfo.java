@@ -77,11 +77,7 @@ public class FileInfo implements GuiInterface {
 		if (!DupeDetector.CALC_HASH) {
 			return "-";
 		}
-		if (filesize <= 6 * HASH_BLOCK_SIZE) {
-			qHash = calcFullHash(folder);
-		} else {
-			qHash = calcQuickHash(folder);
-		}
+		qHash = calcFullHash(folder);
 		return qHash;
 	}
 
@@ -101,24 +97,6 @@ public class FileInfo implements GuiInterface {
 		}
 	}
 
-	private String calcQuickHash(Path folder) {
-		try {
-			digest.reset();
-			Path file = folder.resolve(filename);
-			try (RandomAccessFile in = new RandomAccessFile(file.toFile(), "r")) {
-				updateHash(in, HASH_BLOCK_SIZE);
-				in.seek((filesize - HASH_BLOCK_SIZE) / 2);
-				updateHash(in, HASH_BLOCK_SIZE);
-				in.seek(filesize - HASH_BLOCK_SIZE);
-				updateHash(in, HASH_BLOCK_SIZE);
-				byte[] hash = digest.digest();
-				return Utils.bytesToHex(hash);
-			}
-		} catch (IOException e) {
-			System.err.println("ERROR " + e.toString());
-			return "ERROR " + e.toString().replace(Const.COLUMN_SEPERATOR, " ");
-		}
-	}
 
 	private void updateHash(InputStream in, int len) {
 		try {
