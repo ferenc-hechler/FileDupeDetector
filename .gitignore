@@ -1,5 +1,6 @@
 /.settings/
 /target/
+/bin/
 /out/
 /.classpath
 /.project

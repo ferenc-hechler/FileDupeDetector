@@ -51,7 +51,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.3</version>
                 <configuration>
-                    <mainClass>de.hechler.filedupedetector.DummyGui</mainClass>
+                    <mainClass>de.hechler.filedupedetector.gui.FileDupeDetectorMain</mainClass>
                 </configuration>
             </plugin>
         </plugins>
