@@ -69,6 +69,14 @@ public class QHashManager {
 		return hash2dupeInfoMap.containsKey(qHash);
 	}
 	
+	public int getCountDupes(String qHash) {
+		DupeInfo dupeInfo = hash2dupeInfoMap.get(qHash);
+		if (dupeInfo == null) {
+			return 0;
+		}
+		return dupeInfo.numDupes-1; 
+	}
+	
 	public void showStats() {
 		long sumDifferentFiles = 0;
 		long sumDuplicateFiles = 0;

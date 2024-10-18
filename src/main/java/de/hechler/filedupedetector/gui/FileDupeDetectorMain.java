@@ -10,10 +10,13 @@ import de.hechler.filedupedetector.BaseFolder;
 import de.hechler.filedupedetector.FileInfo;
 import de.hechler.filedupedetector.Folder;
 import de.hechler.filedupedetector.GuiInterface;
+import de.hechler.filedupedetector.QHashManager;
 import de.hechler.filedupedetector.ScanStore;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -90,10 +93,14 @@ public class FileDupeDetectorMain extends Application {
 		this.offsetZ = 0.0;
 		this.radiusScale = 2.0;
 		initColors();
+		System.out.println("scanning");
 		store = new ScanStore();
 		store.scanFolder("./in/testdir");
 //		store.write("./in/store.out");
 //		store.read("./in/store.out");
+		System.out.println("collect hash dupes");
+		QHashManager.getInstance().collectHashDupes(store);
+		System.out.println("open");
 		open();
 	}
 
@@ -165,6 +172,7 @@ public class FileDupeDetectorMain extends Application {
         private LongProperty size = new SimpleLongProperty();
         private StringProperty lastModified = new SimpleStringProperty();
         private StringProperty hash = new SimpleStringProperty();
+        private IntegerProperty duplicates = new SimpleIntegerProperty();
 
         public Item(GuiInterface guiInterface) {
         	this.guiInterface = guiInterface;
@@ -174,6 +182,7 @@ public class FileDupeDetectorMain extends Application {
                 setSize(fi.getFilesize());
                 setLastModified(long2datetimestring(fi.getLastModified()));
                 setHash(fi.getqHash());
+                setDuplicates(QHashManager.getInstance().getCountDupes(fi.getqHash()));
         	}
         	else {
         		Folder folder = (Folder) guiInterface;
@@ -181,7 +190,17 @@ public class FileDupeDetectorMain extends Application {
                 setSize(0);
                 setLastModified("");
                 setHash("");
+                setDuplicates(0);
         	}
+        }
+
+        public Item(GuiInterface guiInterface, String name, long size, String lastModified, String hash, int duplicates) {
+        	this.guiInterface = guiInterface;
+            setName(name);
+            setSize(size);
+            setLastModified(lastModified);
+            setHash(hash);
+            setDuplicates(duplicates);
         }
 
         static String long2datetimestring(long millis) {
@@ -189,14 +208,6 @@ public class FileDupeDetectorMain extends Application {
         	return sdf.format(date);
         }
         
-        public Item(GuiInterface guiInterface, String name, long size, String lastModified, String hash) {
-        	this.guiInterface = guiInterface;
-            setName(name);
-            setSize(size);
-            setLastModified(lastModified);
-            setHash(hash);
-        }
-
         public final LongProperty sizeProperty() {
             return this.size;
         }
@@ -243,6 +254,18 @@ public class FileDupeDetectorMain extends Application {
 
         public final void setHash(final java.lang.String hash) {
             this.hashProperty().set(hash);
+        }
+
+        public final IntegerProperty duplicatesProperty() {
+            return this.duplicates;
+        }
+
+        public final int getDuplicates() {
+            return this.duplicatesProperty().get();
+        }
+
+        public final void setDuplicates(final int duplicates) {
+            this.duplicatesProperty().set(duplicates);
         }
 
     }
@@ -351,9 +374,14 @@ public class FileDupeDetectorMain extends Application {
         hashCol.setCellValueFactory(cellData -> cellData.getValue().getValue().hashProperty());
         hashCol.setPrefWidth(420);
 
-        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, lastModifiedCol, hashCol));
+        TreeTableColumn<Item, Number> duplicateCol = new TreeTableColumn<>("#dups");
+        duplicateCol.setCellValueFactory(cellData -> cellData.getValue().getValue().duplicatesProperty());
+        duplicateCol.setStyle("-fx-alignment: CENTER-RIGHT;");
+        duplicateCol.setPrefWidth(50);
 
-        ItemTreeNode rootNode = new ItemTreeNode(new Item(null, "root", 0, "", "")); 
+        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, lastModifiedCol, hashCol, duplicateCol));
+
+        ItemTreeNode rootNode = new ItemTreeNode(new Item(null, "root", 0, "", "", 0)); 
         tree.setRoot(rootNode);
         tree.setShowRoot(false);
         List<BaseFolder> baseFolders = store.getBaseFolders();

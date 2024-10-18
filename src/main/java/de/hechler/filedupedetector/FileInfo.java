@@ -118,26 +118,6 @@ public class FileInfo implements GuiInterface {
 		}
 	}
 
-	private void updateHash(RandomAccessFile in, int len) {
-		try {
-			int missing = len;
-			int cnt = in.read(buf, 0, missing);
-			while (cnt > 0) {
-				digest.update(buf, 0, cnt);
-				missing -= cnt;
-				if (missing == 0) {
-					break;
-				}
-				cnt = in.read(buf, 0, missing);
-			}
-			if (missing > 0) {
-				throw new RuntimeException("error calcing hash for " + filename);
-			}
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public String getFilename() {
 		return filename;
 	}
