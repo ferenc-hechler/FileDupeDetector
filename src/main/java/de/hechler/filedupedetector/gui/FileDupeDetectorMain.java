@@ -12,6 +12,7 @@ import de.hechler.filedupedetector.Folder;
 import de.hechler.filedupedetector.GuiInterface;
 import de.hechler.filedupedetector.QHashManager;
 import de.hechler.filedupedetector.ScanStore;
+import de.hechler.filedupedetector.SumInfo;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
@@ -41,7 +42,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class FileDupeDetectorMain extends Application {
@@ -55,44 +55,53 @@ public class FileDupeDetectorMain extends Application {
 	private Label lbTextID;
 	private Slider slider;
 
+	enum FOLDER_STATUS {
+			UNIQUE, DUPLICATE, PARTIAL_DUPLICATE
+	}
+	
     private final Image folderImage = new Image(getClass().getResourceAsStream("/img/folder-16.png"));
+    private final Image folderRedImage = new Image(getClass().getResourceAsStream("/img/folder-red-16.png"));
+    private final Image folderOrangeImage = new Image(getClass().getResourceAsStream("/img/folder-orange-16.png"));
 
     private final Image fileImage = new Image(getClass().getResourceAsStream("/img/file-16.png"));
+    private final Image fileRedImage = new Image(getClass().getResourceAsStream("/img/file-red-16.png"));
+    private final Image fileOrangeImage = new Image(getClass().getResourceAsStream("/img/file-orange-16.png"));
 
-    private Node newFolderIcon() {
-    	return new ImageView(folderImage);
+    private Node newFolderIcon(FOLDER_STATUS status) {
+    	switch (status) {
+		case UNIQUE: {
+	    	return new ImageView(folderImage);
+		}
+		case DUPLICATE: {
+	    	return new ImageView(folderRedImage);
+		}
+		case PARTIAL_DUPLICATE: {
+	    	return new ImageView(folderOrangeImage);
+		}
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + status);
+		}
     }
 
-    private Node newFileIcon() {
-    	return new ImageView(fileImage);
+    private Node newFileIcon(FOLDER_STATUS status) {
+    	switch (status) {
+		case UNIQUE: {
+	    	return new ImageView(fileImage);
+		}
+		case DUPLICATE: {
+	    	return new ImageView(fileRedImage);
+		}
+		case PARTIAL_DUPLICATE: {
+	    	return new ImageView(fileOrangeImage);
+		}
+		default:
+			throw new IllegalArgumentException("Unexpected value: " + status);
+		}
     }
 
-    
-	private String title;
-	
-	double scale;
-	double offsetX;
-	double offsetY;
-	double offsetZ;
-	double radiusScale;
-
-    Color white; 
-    Color red; 
-    Color green; 
-    Color yellow; 
-    Color blue; 
-    Color black; 
-    
     private ScanStore store;
 	
-	public FileDupeDetectorMain(String title) {
-		this.title = title;
-		this.scale = 1.0;
-		this.offsetX = 0.0;
-		this.offsetY = 0.0;
-		this.offsetZ = 0.0;
-		this.radiusScale = 2.0;
-		initColors();
+	public FileDupeDetectorMain() {
 		System.out.println("scanning");
 		store = new ScanStore();
 		store.scanFolder("./in/testdir");
@@ -100,23 +109,14 @@ public class FileDupeDetectorMain extends Application {
 //		store.read("./in/store.out");
 		System.out.println("collect hash dupes");
 		QHashManager.getInstance().collectHashDupes(store);
+		System.out.println("collect sum info");
+		store.calcSumInfoFromChildren();
 		System.out.println("open");
 		open();
 	}
 
 	
     
-	public void initColors() {
-        white  = new Color(1.0, 1.0, 1.0, 1.0); 
-        red    = new Color(1.0, 0.1, 0.1, 1.0); 
-        green  = new Color(0.1, 1.0, 0.1, 1.0); 
-        blue   = new Color(0.1, 0.1, 1.0, 1.0); 
-        yellow = new Color(1.0, 1.0, 0.1, 1.0); 
-        black  = new Color(0.0, 0.0, 0.0, 1.0);
-        
-	}
-	
-
     // from: https://stackoverflow.com/questions/31185441/javafx-treetableview-and-expanding-items-without-children
     public static class ItemTreeNode extends TreeItem<Item> {
         private boolean childrenLoaded = false ;
@@ -130,7 +130,17 @@ public class FileDupeDetectorMain extends Application {
             if (childrenLoaded) {
                 return getChildren().isEmpty() ;
             }
-            return (getValue().guiInterface != null) && getValue().guiInterface.isFile();
+            GuiInterface guiInterface = getValue().guiInterface;
+            if (guiInterface== null) {
+            	return false;
+            }
+            if (guiInterface.isFile()) {
+            	return true;
+            }
+            if (guiInterface.getSumInfo().getNumFiles()+guiInterface.getSumInfo().getNumFiles()==0) {
+            	return true;
+            }
+            return false;
         }
 
         @Override
@@ -178,15 +188,29 @@ public class FileDupeDetectorMain extends Application {
         	this.guiInterface = guiInterface;
         	if (guiInterface.isFile()) {
         		FileInfo fi = (FileInfo) guiInterface;
-                setName(fi.getName());
+        		char typeChar ='|';
+        		int duplicates = QHashManager.getInstance().getCountDupes(fi.getqHash());
+        		char statusChar = duplicates == 0 ? 'U' : 'D';
+                setName(fi.getName()+typeChar+statusChar);
                 setSize(fi.getFilesize());
                 setLastModified(long2datetimestring(fi.getLastModified()));
                 setHash(fi.getqHash());
-                setDuplicates(QHashManager.getInstance().getCountDupes(fi.getqHash()));
+                setDuplicates(duplicates);
         	}
         	else {
         		Folder folder = (Folder) guiInterface;
-                setName(folder.getName()+"/");
+        		char typeChar ='/';
+        		SumInfo sumInfo = folder.getSumInfo();
+        		char statusChar = 'U';
+        		if (sumInfo.getDuplicateMemory()>0) {
+            		if (sumInfo.getDuplicateMemory()==sumInfo.getTotalMemory()) {
+            			statusChar = 'D';
+            		}
+            		else {
+            			statusChar = 'P';
+            		}
+        		}
+                setName(folder.getName()+typeChar+statusChar);
                 setSize(0);
                 setLastModified("");
                 setHash("");
@@ -350,14 +374,43 @@ public class FileDupeDetectorMain extends Application {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                if ((item!=null) && item.endsWith("/")) {
-	                setText(empty ? null : item.substring(0, item.length()-1));
-	                setGraphic(empty ? null : newFolderIcon());
+                if (empty) {
+	                setText(null);
+	                setGraphic(null);
+	                return;
                 }
-                else {
-	                setText(empty ? null : item);
-	                setGraphic(empty ? null : newFileIcon());
-                }
+                int len = item.length();
+                String text = item.substring(0, len-2);
+                char typeChar = item.charAt(len-2);
+                char statusChar = item.charAt(len-1);
+                
+                FOLDER_STATUS status = null;
+                switch (statusChar) {
+                case 'U':
+                	status = FOLDER_STATUS.UNIQUE;
+                	break;
+                case 'D':
+                	status = FOLDER_STATUS.DUPLICATE;
+                	break;
+                case 'P':
+                	status = FOLDER_STATUS.PARTIAL_DUPLICATE;
+                	break;
+        		default:
+        			throw new IllegalArgumentException("Unexpected status char: " + statusChar);
+        		}
+                
+                switch (typeChar) {
+                case '/':
+	                setText(text);
+	                setGraphic(newFolderIcon(status));
+                	break;
+                case '|':
+	                setText(text);
+	                setGraphic(newFileIcon(status));
+                	break;
+        		default:
+        			throw new IllegalArgumentException("Unexpected type char: " + typeChar);
+        		}
             }
         });
         
@@ -398,6 +451,7 @@ public class FileDupeDetectorMain extends Application {
 //        TreeView<String> treeView = new TreeView<String> (treeItem);        
 //        StackPane tree = new StackPane();
 //        tree.getChildren().add(treeView);
+		tree.setPrefHeight(HEIGHT-300);
         
 		VBox vbox = new VBox(subScene2D, tree);
 		Group groupALL = new Group(vbox);
@@ -449,7 +503,7 @@ public class FileDupeDetectorMain extends Application {
 
 	public static void main(String[] args) throws Exception {
 		System.out.println("START");
-		FileDupeDetectorMain output = new FileDupeDetectorMain("FileDupeDetectorMain");
+		new FileDupeDetectorMain();
 		System.out.println("FINISHED");
 	}
 	
