@@ -13,6 +13,7 @@ import de.hechler.filedupedetector.GuiInterface;
 import de.hechler.filedupedetector.QHashManager;
 import de.hechler.filedupedetector.ScanStore;
 import de.hechler.filedupedetector.SumInfo;
+import de.hechler.filedupedetector.tools.StopWatch;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.beans.Observable;
@@ -106,15 +107,24 @@ public class FileDupeDetectorMain extends Application {
     private ScanStore store;
 	
 	public FileDupeDetectorMain() {
+		StopWatch sw = new StopWatch();
 		System.out.println("scanning");
 		store = new ScanStore();
-		store.scanFolder("./in/testdir");
+		//store.scanFolder("./in/testdir");
+		//store.scanFolder("D:\\EBOOKS");
+		//System.out.println("scan: "+sw.stopStr());
+		//store.write("./in/store-d_ebooks.out");
+		//System.out.println("write: "+sw.stopStr());
 //		store.write("./in/store.out");
 //		store.read("./in/store.out");
+		store.read("./in/store-d_ebooks.out");
+		System.out.println("read: "+sw.stopStr());
 		System.out.println("collect hash dupes");
 		QHashManager.getInstance().collectHashDupes(store);
-		System.out.println("collect sum info");
+		System.out.println("collect dups: "+sw.stopStr());
+		System.out.println("calc sum info");
 		store.calcSumInfoFromChildren();
+		System.out.println("calc sum: "+sw.stopStr());
 		System.out.println("open");
 		open();
 	}
@@ -217,10 +227,10 @@ public class FileDupeDetectorMain extends Application {
             		}
         		}
                 setName(folder.getName()+typeChar+statusChar);
-                setSize(0);
-                setLastModified("");
-                setHash("");
-                setDuplicates(0);
+                setSize(sumInfo.getTotalMemory());
+                setLastModified(sumInfo.getLastModifiedString());
+                setHash("folders: #"+sumInfo.getNumFolders()+", files: #"+sumInfo.getNumFiles());
+                setDuplicates((int)(sumInfo.getDuplicateMemory()/1024/1024));
                 setMark(false);
         	}
             mark.addListener(bProp -> markChanged(((BooleanProperty)bProp).get()));

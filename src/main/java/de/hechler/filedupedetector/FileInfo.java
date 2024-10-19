@@ -16,7 +16,7 @@ import java.util.List;
 
 public class FileInfo implements GuiInterface {
 
-	private final static int HASH_BLOCK_SIZE = 8192;
+	private final static int HASH_BLOCK_SIZE = 65536;
 
 	private final static byte[] buf;
 	private final static MessageDigest digest;
@@ -25,7 +25,7 @@ public class FileInfo implements GuiInterface {
 	
 	static {
 		try {
-			buf = new byte[6 * HASH_BLOCK_SIZE];
+			buf = new byte[HASH_BLOCK_SIZE];
 			digest = MessageDigest.getInstance("SHA-256");
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
@@ -101,14 +101,14 @@ public class FileInfo implements GuiInterface {
 	private void updateHash(InputStream in, int len) {
 		try {
 			int missing = len;
-			int cnt = in.read(buf, 0, missing);
+			int cnt = in.read(buf, 0, Math.min(HASH_BLOCK_SIZE, missing));
 			while (cnt > 0) {
 				digest.update(buf, 0, cnt);
 				missing -= cnt;
 				if (missing == 0) {
 					break;
 				}
-				cnt = in.read(buf, 0, missing);
+				cnt = in.read(buf, 0, Math.min(HASH_BLOCK_SIZE, missing));
 			}
 			if (missing > 0) {
 				throw new RuntimeException("error calcing hash for " + filename);
