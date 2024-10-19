@@ -15,8 +15,11 @@ import de.hechler.filedupedetector.ScanStore;
 import de.hechler.filedupedetector.SumInfo;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -38,6 +41,7 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.control.cell.CheckBoxTreeTableCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -183,6 +187,7 @@ public class FileDupeDetectorMain extends Application {
         private StringProperty lastModified = new SimpleStringProperty();
         private StringProperty hash = new SimpleStringProperty();
         private IntegerProperty duplicates = new SimpleIntegerProperty();
+        private BooleanProperty mark = new SimpleBooleanProperty();
 
         public Item(GuiInterface guiInterface) {
         	this.guiInterface = guiInterface;
@@ -196,6 +201,7 @@ public class FileDupeDetectorMain extends Application {
                 setLastModified(long2datetimestring(fi.getLastModified()));
                 setHash(fi.getqHash());
                 setDuplicates(duplicates);
+                setMark(false);
         	}
         	else {
         		Folder folder = (Folder) guiInterface;
@@ -215,16 +221,23 @@ public class FileDupeDetectorMain extends Application {
                 setLastModified("");
                 setHash("");
                 setDuplicates(0);
+                setMark(false);
         	}
+            mark.addListener(bProp -> markChanged(((BooleanProperty)bProp).get()));
         }
 
-        public Item(GuiInterface guiInterface, String name, long size, String lastModified, String hash, int duplicates) {
+        private void markChanged(boolean newValue) {
+        	System.out.println(getName()+" changed mark "+newValue);
+		}
+
+		public Item(GuiInterface guiInterface, String name, long size, String lastModified, String hash, int duplicates) {
         	this.guiInterface = guiInterface;
             setName(name);
             setSize(size);
             setLastModified(lastModified);
             setHash(hash);
             setDuplicates(duplicates);
+            setMark(false);
         }
 
         static String long2datetimestring(long millis) {
@@ -290,6 +303,18 @@ public class FileDupeDetectorMain extends Application {
 
         public final void setDuplicates(final int duplicates) {
             this.duplicatesProperty().set(duplicates);
+        }
+
+        public final BooleanProperty markProperty() {
+            return this.mark;
+        }
+
+        public final boolean getMark() {
+            return this.markProperty().get();
+        }
+
+        public final void setMark(final boolean mark) {
+            this.markProperty().set(mark);
         }
 
     }
@@ -432,8 +457,15 @@ public class FileDupeDetectorMain extends Application {
         duplicateCol.setStyle("-fx-alignment: CENTER-RIGHT;");
         duplicateCol.setPrefWidth(50);
 
-        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, lastModifiedCol, hashCol, duplicateCol));
-
+        
+        TreeTableColumn<Item, Boolean> markCol = new TreeTableColumn<>("Mark");
+        markCol.setCellValueFactory(cellData -> cellData.getValue().getValue().markProperty());
+        markCol.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(markCol));
+        markCol.setStyle("-fx-alignment: CENTER;");
+        
+        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, lastModifiedCol, hashCol, duplicateCol, markCol));
+        tree.setEditable(true);
+        
         ItemTreeNode rootNode = new ItemTreeNode(new Item(null, "root", 0, "", "", 0)); 
         tree.setRoot(rootNode);
         tree.setShowRoot(false);
