@@ -93,9 +93,9 @@ public class QHashManager {
 		System.out.println("sum different memory: "+Utils.readableBytes(sumDifferentMem));
 		System.out.println("sum duplicates memory: "+Utils.readableBytes(sumDuplicatesMem));
 	}
-	public long getDuplicationReduction(Folder folder) {
-		return folder2allDupesCompensationBytes.getOrDefault(folder, 0L);
-	}
+//	public long getDuplicationReduction(Folder folder) {
+//		return folder2allDupesCompensationBytes.getOrDefault(folder, 0L);
+//	}
 	public void clear() {
 		instance = null;
 	}

@@ -13,10 +13,10 @@ import de.hechler.filedupedetector.GuiInterface;
 import de.hechler.filedupedetector.QHashManager;
 import de.hechler.filedupedetector.ScanStore;
 import de.hechler.filedupedetector.SumInfo;
+import de.hechler.filedupedetector.tools.FileTools;
 import de.hechler.filedupedetector.tools.StopWatch;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.beans.Observable;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.LongProperty;
@@ -110,15 +110,19 @@ public class FileDupeDetectorMain extends Application {
 		StopWatch sw = new StopWatch();
 		System.out.println("scanning");
 		store = new ScanStore();
-		//store.scanFolder("./in/testdir");
-		//store.scanFolder("D:\\EBOOKS");
-		//System.out.println("scan: "+sw.stopStr());
-		//store.write("./in/store-d_ebooks.out");
-		//System.out.println("write: "+sw.stopStr());
+		
+//		store.scanFolder("./in/testdir");
+//		store.scanFolder("D:\\EBOOKS");
+//		System.out.println("scan: "+sw.stopStr());
+		
 //		store.write("./in/store.out");
+//		store.write("./in/store-d_ebooks.out");
+//		System.out.println("write: "+sw.stopStr());
+		
 //		store.read("./in/store.out");
 		store.read("./in/store-d_ebooks.out");
 		System.out.println("read: "+sw.stopStr());
+		
 		System.out.println("collect hash dupes");
 		QHashManager.getInstance().collectHashDupes(store);
 		System.out.println("collect dups: "+sw.stopStr());
@@ -194,6 +198,8 @@ public class FileDupeDetectorMain extends Application {
     	GuiInterface guiInterface;
         private StringProperty name = new SimpleStringProperty();
         private LongProperty size = new SimpleLongProperty();
+        private LongProperty duplicateSize = new SimpleLongProperty();
+        private LongProperty duplicateRatioSize = new SimpleLongProperty();
         private StringProperty lastModified = new SimpleStringProperty();
         private StringProperty hash = new SimpleStringProperty();
         private IntegerProperty duplicates = new SimpleIntegerProperty();
@@ -208,6 +214,8 @@ public class FileDupeDetectorMain extends Application {
         		char statusChar = duplicates == 0 ? 'U' : 'D';
                 setName(fi.getName()+typeChar+statusChar);
                 setSize(fi.getFilesize());
+                setDuplicateSize(fi.getSumInfo().getDuplicateMemory());
+                setDuplicateRatioSize(fi.getSumInfo().getDuplicateRatioMemory());
                 setLastModified(long2datetimestring(fi.getLastModified()));
                 setHash(fi.getqHash());
                 setDuplicates(duplicates);
@@ -228,9 +236,11 @@ public class FileDupeDetectorMain extends Application {
         		}
                 setName(folder.getName()+typeChar+statusChar);
                 setSize(sumInfo.getTotalMemory());
+                setDuplicateSize(sumInfo.getDuplicateMemory());
+                setDuplicateRatioSize(sumInfo.getDuplicateRatioMemory());
                 setLastModified(sumInfo.getLastModifiedString());
                 setHash("folders: #"+sumInfo.getNumFolders()+", files: #"+sumInfo.getNumFiles());
-                setDuplicates((int)(sumInfo.getDuplicateMemory()/1024/1024));
+                setDuplicates(0);
                 setMark(false);
         	}
             mark.addListener(bProp -> markChanged(((BooleanProperty)bProp).get()));
@@ -240,10 +250,12 @@ public class FileDupeDetectorMain extends Application {
         	System.out.println(getName()+" changed mark "+newValue);
 		}
 
-		public Item(GuiInterface guiInterface, String name, long size, String lastModified, String hash, int duplicates) {
+		public Item(GuiInterface guiInterface, String name, long size, long duplicateSize, long duplicateRatioSize, String lastModified, String hash, int duplicates) {
         	this.guiInterface = guiInterface;
             setName(name);
             setSize(size);
+            setDuplicateSize(duplicateSize);
+            setDuplicateRatioSize(duplicateRatioSize);
             setLastModified(lastModified);
             setHash(hash);
             setDuplicates(duplicates);
@@ -258,23 +270,39 @@ public class FileDupeDetectorMain extends Application {
         public final LongProperty sizeProperty() {
             return this.size;
         }
-
         public final long getSize() {
             return this.sizeProperty().get();
         }
-
         public final void setSize(final long size) {
             this.sizeProperty().set(size);
+        }
+
+        public final LongProperty duplicateSizeProperty() {
+            return this.duplicateSize;
+        }
+        public final long getDuplicateSize() {
+            return this.duplicateSizeProperty().get();
+        }
+        public final void setDuplicateSize(final long duplicateSize) {
+            this.duplicateSizeProperty().set(duplicateSize);
+        }
+
+        public final LongProperty duplicateRatioSizeProperty() {
+            return this.duplicateRatioSize;
+        }
+        public final long getDuplicateRatioSize() {
+            return this.duplicateRatioSizeProperty().get();
+        }
+        public final void setDuplicateRatioSize(final long duplicateRatioSize) {
+            this.duplicateRatioSizeProperty().set(duplicateRatioSize);
         }
 
         public final StringProperty nameProperty() {
             return this.name;
         }
-
         public final java.lang.String getName() {
             return this.nameProperty().get();
         }
-
         public final void setName(final java.lang.String name) {
             this.nameProperty().set(name);
         }
@@ -282,11 +310,9 @@ public class FileDupeDetectorMain extends Application {
         public final StringProperty lastModifiedProperty() {
             return this.lastModified;
         }
-
         public final java.lang.String getLastModified() {
             return this.lastModifiedProperty().get();
         }
-
         public final void setLastModified(final java.lang.String lastModified) {
             this.lastModifiedProperty().set(lastModified);
         }
@@ -294,11 +320,9 @@ public class FileDupeDetectorMain extends Application {
         public final StringProperty hashProperty() {
             return this.hash;
         }
-
         public final java.lang.String getHash() {
             return this.hashProperty().get();
         }
-
         public final void setHash(final java.lang.String hash) {
             this.hashProperty().set(hash);
         }
@@ -306,11 +330,9 @@ public class FileDupeDetectorMain extends Application {
         public final IntegerProperty duplicatesProperty() {
             return this.duplicates;
         }
-
         public final int getDuplicates() {
             return this.duplicatesProperty().get();
         }
-
         public final void setDuplicates(final int duplicates) {
             this.duplicatesProperty().set(duplicates);
         }
@@ -318,11 +340,9 @@ public class FileDupeDetectorMain extends Application {
         public final BooleanProperty markProperty() {
             return this.mark;
         }
-
         public final boolean getMark() {
             return this.markProperty().get();
         }
-
         public final void setMark(final boolean mark) {
             this.markProperty().set(mark);
         }
@@ -451,8 +471,57 @@ public class FileDupeDetectorMain extends Application {
         
         TreeTableColumn<Item, Number> sizeCol = new TreeTableColumn<>("Size");
         sizeCol.setCellValueFactory(cellData -> cellData.getValue().getValue().sizeProperty());
+        sizeCol.setCellFactory(ttc -> new TreeTableCell<Item, Number>() {
+
+            @Override
+            protected void updateItem(Number nSize, boolean empty) {
+                super.updateItem(nSize, empty);
+                if (empty) {
+	                setText(null);
+	                return;
+                }
+                String text = FileTools.pretty(nSize.longValue());
+                setText(text);
+            }
+        });
         sizeCol.setStyle("-fx-alignment: CENTER-RIGHT;");
         sizeCol.setPrefWidth(100);
+
+        TreeTableColumn<Item, Number> duplicateSizeCol = new TreeTableColumn<>("Dup. Size");
+        duplicateSizeCol.setCellValueFactory(cellData -> cellData.getValue().getValue().duplicateSizeProperty());
+        duplicateSizeCol.setCellFactory(ttc -> new TreeTableCell<Item, Number>() {
+
+            @Override
+            protected void updateItem(Number nDuplicateSize, boolean empty) {
+                super.updateItem(nDuplicateSize, empty);
+                if (empty) {
+	                setText(null);
+	                return;
+                }
+                String text = FileTools.pretty(nDuplicateSize.longValue());
+                setText(text);
+            }
+        });
+        duplicateSizeCol.setStyle("-fx-alignment: CENTER-RIGHT;");
+        duplicateSizeCol.setPrefWidth(100);
+
+        TreeTableColumn<Item, Number> duplicateRatioSizeCol = new TreeTableColumn<>("Dup. Ratio Size");
+        duplicateRatioSizeCol.setCellValueFactory(cellData -> cellData.getValue().getValue().duplicateRatioSizeProperty());
+        duplicateRatioSizeCol.setCellFactory(ttc -> new TreeTableCell<Item, Number>() {
+
+            @Override
+            protected void updateItem(Number nDuplicateRatioSize, boolean empty) {
+                super.updateItem(nDuplicateRatioSize, empty);
+                if (empty) {
+	                setText(null);
+	                return;
+                }
+                String text = FileTools.pretty(nDuplicateRatioSize.longValue());
+                setText(text);
+            }
+        });
+        duplicateRatioSizeCol.setStyle("-fx-alignment: CENTER-RIGHT;");
+        duplicateRatioSizeCol.setPrefWidth(100);
 
         TreeTableColumn<Item, String> lastModifiedCol = new TreeTableColumn<>("Last Modified");
         lastModifiedCol.setCellValueFactory(cellData -> cellData.getValue().getValue().lastModifiedProperty());
@@ -473,10 +542,10 @@ public class FileDupeDetectorMain extends Application {
         markCol.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(markCol));
         markCol.setStyle("-fx-alignment: CENTER;");
         
-        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, lastModifiedCol, hashCol, duplicateCol, markCol));
+        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, duplicateSizeCol, duplicateRatioSizeCol, lastModifiedCol, hashCol, duplicateCol, markCol));
         tree.setEditable(true);
         
-        ItemTreeNode rootNode = new ItemTreeNode(new Item(null, "root", 0, "", "", 0)); 
+        ItemTreeNode rootNode = new ItemTreeNode(new Item(null, "root", 0, 0, 0, "", "", 0)); 
         tree.setRoot(rootNode);
         tree.setShowRoot(false);
         List<BaseFolder> baseFolders = store.getBaseFolders();
@@ -484,15 +553,6 @@ public class FileDupeDetectorMain extends Application {
         	rootNode.getChildren().add(new ItemTreeNode(new Item(bf)));
         }
 		
-//		TreeItem<String> treeItem = new TreeItem<String> ("Inbox", newFolderIcon());
-//        treeItem.setExpanded(true);
-//        for (int i = 1; i < 6; i++) {
-//            TreeItem<String> item = new TreeItem<String> ("Message" + i, newFileIcon());            
-//            treeItem.getChildren().add(item);
-//        }        
-//        TreeView<String> treeView = new TreeView<String> (treeItem);        
-//        StackPane tree = new StackPane();
-//        tree.getChildren().add(treeView);
 		tree.setPrefHeight(HEIGHT-300);
         
 		VBox vbox = new VBox(subScene2D, tree);

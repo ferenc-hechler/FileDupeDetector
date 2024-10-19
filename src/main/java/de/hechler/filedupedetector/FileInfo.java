@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -185,11 +184,18 @@ public class FileInfo implements GuiInterface {
 	}
 
 	@Override public SumInfo getSumInfo() {
-		long dupesize = 0;
-		if (QHashManager.getInstance().isDupe(qHash)) {
-			dupesize = filesize;
+		long dupeSize = 0;
+		long dupeRatioSize = 0;
+		long dupes = QHashManager.getInstance().getCountDupes(qHash);
+		int numFiles = 1;
+		int numDuplicateFiles = 0;
+		int numFolders = 0;
+		if (dupes != 0) {
+			numDuplicateFiles = 1;
+			dupeSize = filesize;
+			dupeRatioSize = filesize * dupes / (dupes+1);
 		}
-		return new SumInfo(1, 0, filesize, dupesize, lastModified);
+		return new SumInfo(numFiles, numDuplicateFiles, numFolders, filesize, dupeSize, dupeRatioSize, lastModified);
 	}
 
 	@Override public List<GuiInterface> getChildFolders() {
