@@ -136,8 +136,8 @@ public class FileDupeDetectorMain extends Application {
 //		store.write("./in/store-d_ebooks.out");
 //		System.out.println("write: "+sw.stopStr());
 		
-		store.read("./in/store.out");
-//		store.read("./in/store-d_ebooks.out");
+//		store.read("./in/store.out");
+		store.read("./in/store-d_ebooks.out");
 		System.out.println("read: "+sw.stopStr());
 		
 		System.out.println("collect hash dupes");
@@ -548,6 +548,12 @@ public class FileDupeDetectorMain extends Application {
             }
         });
         
+        TreeTableColumn<Item, Boolean> markCol = new TreeTableColumn<>("X");
+        markCol.setCellValueFactory(cellData -> cellData.getValue().getValue().markProperty());
+        markCol.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(markCol));
+        markCol.setStyle("-fx-alignment: CENTER;");
+        markCol.setPrefWidth(20);
+        
         TreeTableColumn<Item, Number> sizeCol = new TreeTableColumn<>("Size");
         sizeCol.setCellValueFactory(cellData -> cellData.getValue().getValue().sizeProperty());
         sizeCol.setCellFactory(ttc -> new TreeTableCell<Item, Number>() {
@@ -616,12 +622,7 @@ public class FileDupeDetectorMain extends Application {
         duplicateCol.setPrefWidth(50);
 
         
-        TreeTableColumn<Item, Boolean> markCol = new TreeTableColumn<>("Mark");
-        markCol.setCellValueFactory(cellData -> cellData.getValue().getValue().markProperty());
-        markCol.setCellFactory(CheckBoxTreeTableCell.forTreeTableColumn(markCol));
-        markCol.setStyle("-fx-alignment: CENTER;");
-        
-        tree.getColumns().addAll(Arrays.asList(nameCol, sizeCol, duplicateSizeCol, duplicateRatioSizeCol, lastModifiedCol, hashCol, duplicateCol, markCol));
+        tree.getColumns().addAll(Arrays.asList(nameCol, markCol, sizeCol, duplicateSizeCol, duplicateRatioSizeCol, lastModifiedCol, hashCol, duplicateCol));
         tree.setEditable(true);
         
         ItemTreeNode rootNode = new ItemTreeNode(new Item(null, "root", 0, 0, 0, "", "", 0)); 
@@ -638,11 +639,26 @@ public class FileDupeDetectorMain extends Application {
 		Group groupALL = new Group(vbox);
 		Scene scene = new Scene(groupALL);
 		
-		primary.setScene(scene);
+        // Setup resize listener
+        primary.widthProperty().addListener((obs, oldVal, newVal) -> resizeWindow());
+        primary.heightProperty().addListener((obs, oldVal, newVal) -> resizeWindow());
+        
+        primary.setScene(scene);
 		primaryStage.show();
+	
 	}
 	
-    
+	// from: https://javanexus.com/blog/fix-resizable-canvas-javafx
+	private void resizeWindow() {
+        double width = primary.getWidth();
+        double height = primary.getHeight();
+
+        tree.setMaxHeight(height-120);
+        tree.setPrefHeight(height-120);
+        tree.setMaxWidth(width-18);
+        tree.setPrefWidth(width-18);
+    }
+	
 	private void recalcTree() {
 		store.updateSumInfoFromChildren();
 		recursiveRecalcTree(tree.getRoot());

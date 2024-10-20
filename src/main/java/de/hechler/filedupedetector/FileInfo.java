@@ -210,7 +210,7 @@ public class FileInfo implements GuiInterface {
 			else {
 				numDuplicateFiles = 1;
 				dupeSize = filesize;
-				dupeRatioSize = filesize * dupes / (dupes+1);
+				dupeRatioSize = filesize / (dupes+1);
 			}
 		}
 		return new SumInfo(
