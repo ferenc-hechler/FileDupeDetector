@@ -184,18 +184,40 @@ public class FileInfo implements GuiInterface {
 	}
 
 	@Override public SumInfo getSumInfo() {
-		long dupeSize = 0;
-		long dupeRatioSize = 0;
 		long dupes = QHashManager.getInstance().getCountDupes(qHash);
+
 		int numFiles = 1;
+		int numSelectedFiles = 0;
+		int numHiddenFiles = 0;
 		int numDuplicateFiles = 0;
 		int numFolders = 0;
+		long selecedSize = 0;
+		long hiddenSize = 0;		
+		long dupeSize = 0;
+		long dupeRatioSize = 0;
+		
 		if (dupes != 0) {
-			numDuplicateFiles = 1;
-			dupeSize = filesize;
-			dupeRatioSize = filesize * dupes / (dupes+1);
+			if (QHashManager.getInstance().isSelectFileForHash(this)) {
+				numSelectedFiles = 1;
+				selecedSize = filesize;
+				dupeSize = filesize;
+				dupeRatioSize = filesize;
+			}
+			else if (QHashManager.getInstance().isHiddenByOtherFileForHash(this)) {
+				numHiddenFiles = 1;
+				hiddenSize = filesize;
+			}
+			else {
+				numDuplicateFiles = 1;
+				dupeSize = filesize;
+				dupeRatioSize = filesize * dupes / (dupes+1);
+			}
 		}
-		return new SumInfo(numFiles, numDuplicateFiles, numFolders, filesize, dupeSize, dupeRatioSize, lastModified);
+		return new SumInfo(
+				numFiles, numSelectedFiles, numHiddenFiles ,numDuplicateFiles, 
+				numFolders, 
+				filesize, selecedSize, hiddenSize, dupeSize, dupeRatioSize, 
+				lastModified);
 	}
 
 	@Override public List<GuiInterface> getChildFolders() {

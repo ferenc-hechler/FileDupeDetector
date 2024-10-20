@@ -228,56 +228,9 @@ public class FileDupeDetectorMain extends Application {
 
         public Item(GuiInterface guiInterface) {
         	this.guiInterface = guiInterface;
-        	if (guiInterface.isFile()) {
-        		FileInfo fi = (FileInfo) guiInterface;
-        		char typeChar ='|';
-        		int duplicates = QHashManager.getInstance().getCountDupes(fi.getqHash());
-        		char statusChar;
-        		if (duplicates == 0) {
-        			statusChar = 'U';
-        		}
-        		else if (QHashManager.getInstance().isSelectFileForHash(fi)) {
-        			statusChar = 'S';
-        		}
-        		else if (QHashManager.getInstance().isHiddenByOtherFileForHash(fi)) {
-        			statusChar = 'H';
-        		}
-        		else {
-        			statusChar = 'D';
-        		}
-        		
-                setName(fi.getName()+typeChar+statusChar);
-                setSize(fi.getFilesize());
-                setDuplicateSize(fi.getSumInfo().getDuplicateMemory());
-                setDuplicateRatioSize(fi.getSumInfo().getDuplicateRatioMemory());
-                setLastModified(long2datetimestring(fi.getLastModified()));
-                setHash(fi.getqHash());
-                setDuplicates(duplicates);
-                setMark(false);
-        	}
-        	else {
-        		Folder folder = (Folder) guiInterface;
-        		char typeChar ='/';
-        		SumInfo sumInfo = folder.getSumInfo();
-        		char statusChar = 'U';
-        		if (sumInfo.getDuplicateMemory()>0) {
-            		if (sumInfo.getDuplicateMemory()==sumInfo.getTotalMemory()) {
-            			statusChar = 'D';
-            		}
-            		else {
-            			statusChar = 'P';
-            		}
-        		}
-                setName(folder.getName()+typeChar+statusChar);
-                setSize(sumInfo.getTotalMemory());
-                setDuplicateSize(sumInfo.getDuplicateMemory());
-                setDuplicateRatioSize(sumInfo.getDuplicateRatioMemory());
-                setLastModified(sumInfo.getLastModifiedString());
-                setHash("folders: #"+sumInfo.getNumFolders()+", files: #"+sumInfo.getNumFiles());
-                setDuplicates(0);
-                setMark(false);
-        	}
+            setMark(false);
             mark.addListener(bProp -> markChanged(((BooleanProperty)bProp).get()));
+        	update();
         }
 
 		public void update() {
@@ -315,20 +268,30 @@ public class FileDupeDetectorMain extends Application {
         		char typeChar ='/';
         		SumInfo sumInfo = folder.getSumInfo();
         		char statusChar = 'U';
-        		if (sumInfo.getDuplicateMemory()>0) {
-            		if (sumInfo.getDuplicateMemory()==sumInfo.getTotalMemory()) {
+        		if (sumInfo.getNumDuplicateFiles()>0) {
+            		if (sumInfo.getNumDuplicateFiles() == sumInfo.getNumFiles()) {
             			statusChar = 'D';
             		}
             		else {
             			statusChar = 'P';
             		}
         		}
+        		else if (sumInfo.getNumSelectedFiles()>0) {
+            		if (sumInfo.getNumHiddenFiles() == 0) {
+            			statusChar = 'S';
+            		}
+        		}
+        		else if (sumInfo.getNumHiddenFiles()>0) {
+            		if (sumInfo.getNumHiddenFiles() == sumInfo.getNumFiles()) {
+            			statusChar = 'H';
+            		}
+        		}
                 setName(folder.getName()+typeChar+statusChar);
-                setSize(sumInfo.getTotalMemory());
+                setSize(sumInfo.getTotalMemory()-sumInfo.getHiddenMemory());
                 setDuplicateSize(sumInfo.getDuplicateMemory());
                 setDuplicateRatioSize(sumInfo.getDuplicateRatioMemory());
                 setLastModified(sumInfo.getLastModifiedString());
-                setHash("folders: #"+sumInfo.getNumFolders()+", files: #"+sumInfo.getNumFiles());
+                setHash("folders: #"+sumInfo.getNumFolders()+", files: #"+sumInfo.getNumFiles()+", hidden: #"+sumInfo.getNumHiddenFiles()+", selected: #"+sumInfo.getNumSelectedFiles()+", duplicates: #"+sumInfo.getNumDuplicateFiles());
                 setDuplicates(0);
         	}
 		}
