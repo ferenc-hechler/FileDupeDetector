@@ -1,6 +1,7 @@
 package de.hechler.filedupedetector;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -120,6 +121,14 @@ public class QHashManager {
 		}
 		return dupeInfo.selectedFile != fi;
 	}
+	public List<FileInfo> getFileInfosForHash(String qHash) {
+		DupeInfo dupeInfo = hash2dupeInfoMap.get(qHash);
+		if (dupeInfo == null) {
+			return Collections.emptyList();
+		}
+		return dupeInfo.dupeFiles;
+	}
+	
 
 	public void showStats() {
 		long sumDifferentFiles = 0;
@@ -140,5 +149,4 @@ public class QHashManager {
 	public void clear() {
 		instance = null;
 	}
-	
 }

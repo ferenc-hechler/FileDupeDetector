@@ -4,7 +4,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import de.hechler.filedupedetector.BaseFolder;
 import de.hechler.filedupedetector.FileInfo;
@@ -57,11 +59,17 @@ public class FileDupeDetectorMain extends Application {
     private static final float WIDTH = 1400;
     private static final float HEIGHT = 1000;
 
-	private Stage primary;
+    private boolean secondaryWindow;
+
+    private ScanStore store;
+    private Set<GuiInterface> filteredFiles;
+	
+    private Stage primary;
 	private Label lbTextID;
 	private Slider slider;
 	private TreeTableView<Item> tree;	
 	private Tooltip tooltip;
+
 
 	enum FOLDER_STATUS {
 			UNIQUE, DUPLICATE, PARTIAL_DUPLICATE, SELECTED, HIDDEN
@@ -123,9 +131,14 @@ public class FileDupeDetectorMain extends Application {
 		}
     }
 
-    private ScanStore store;
-	
+	public FileDupeDetectorMain(ScanStore store, Set<GuiInterface> filteredFiles) {
+		this.secondaryWindow = true;
+		this.store = store;
+		this.filteredFiles = filteredFiles;
+		open();
+	}
 	public FileDupeDetectorMain() {
+		this.secondaryWindow = false;
 		StopWatch sw = new StopWatch();
 		System.out.println("scanning");
 		store = new ScanStore();
@@ -166,9 +179,11 @@ public class FileDupeDetectorMain extends Application {
     // from: https://stackoverflow.com/questions/31185441/javafx-treetableview-and-expanding-items-without-children
     public static class ItemTreeNode extends TreeItem<Item> {
         private boolean childrenLoaded = false ;
+        private FileDupeDetectorMain fileDupeDet;
 
-        public ItemTreeNode(Item value) {
+        public ItemTreeNode(FileDupeDetectorMain fileDupeDet, Item value) {
             super(value);
+            this.fileDupeDet = fileDupeDet;
         }
 
         @Override
@@ -205,11 +220,15 @@ public class FileDupeDetectorMain extends Application {
             if ((guiInterface != null) && guiInterface.isFolder()) {
             	List<GuiInterface> childFolders = guiInterface.getChildFolders();
                 for (GuiInterface childFolder:childFolders) {
-                    children.add(new ItemTreeNode(new Item(childFolder)));
+                	if (checkFilter(childFolder)) {
+                		children.add(new ItemTreeNode(fileDupeDet, new Item(fileDupeDet, childFolder)));
+                	}
                 }
             	List<GuiInterface> childFiles = guiInterface.getChildFiles();
                 for (GuiInterface childFile:childFiles) {
-                    children.add(new ItemTreeNode(new Item(childFile)));
+                	if (checkFilter(childFile)) {
+                		children.add(new ItemTreeNode(fileDupeDet, new Item(fileDupeDet, childFile)));
+                	}
                 }
             }
             if (!children.isEmpty()) {
@@ -222,12 +241,20 @@ public class FileDupeDetectorMain extends Application {
             }
             return super.getChildren() ;
         }
+
+		private boolean checkFilter(GuiInterface gi) {
+			if (fileDupeDet.filteredFiles == null) {
+				return true;
+			}
+			return fileDupeDet.filteredFiles.contains(gi);
+		}
     }
 
     public static class Item {
     	static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     	
     	GuiInterface guiInterface;
+    	FileDupeDetectorMain fileDupeDet;
         private StringProperty name = new SimpleStringProperty();
         private LongProperty size = new SimpleLongProperty();
         private LongProperty duplicateSize = new SimpleLongProperty();
@@ -237,7 +264,8 @@ public class FileDupeDetectorMain extends Application {
         private IntegerProperty duplicates = new SimpleIntegerProperty();
         private BooleanProperty mark = new SimpleBooleanProperty();
 
-        public Item(GuiInterface guiInterface) {
+        public Item(FileDupeDetectorMain fileDupeDet, GuiInterface guiInterface) {
+        	this.fileDupeDet = fileDupeDet;
         	this.guiInterface = guiInterface;
             setMark(false);
             mark.addListener(bProp -> markChanged(((BooleanProperty)bProp).get()));
@@ -331,10 +359,10 @@ public class FileDupeDetectorMain extends Application {
     	        	}
     			});
         	}
-        	instance.recalcTree();
+    		fileDupeDet.recalcTree();
 		}
 
-		public Item(GuiInterface guiInterface, String name, long size, long duplicateSize, long duplicateRatioSize, String lastModified, String hash, int duplicates) {
+		public Item(FileDupeDetectorMain fileDupeDet, GuiInterface guiInterface, String name, long size, long duplicateSize, long duplicateRatioSize, String lastModified, String hash, int duplicates) {
         	this.guiInterface = guiInterface;
             setName(name);
             setSize(size);
@@ -441,65 +469,72 @@ public class FileDupeDetectorMain extends Application {
 		
 		tooltip = new Tooltip();
 
-		primary.setTitle("3D Output");
-		Button btPrevious = new Button("<");
-		btPrevious.setOnAction(event -> {
-			System.out.println("<");;
-		});
-		Button btNext = new Button(">");
-		btNext.setOnAction(event -> {
-			System.out.println(">");;
-		});
+		primary.setTitle("File Dupe Detector");
+		SubScene subScene2D = null;
+		if (!secondaryWindow) {
+			Button btPrevious = new Button("<");
+			btPrevious.setOnAction(event -> {
+				System.out.println("<");;
+			});
+			Button btNext = new Button(">");
+			btNext.setOnAction(event -> {
+				System.out.println(">");;
+			});
+			
+			Button btSmaller = new Button("v");
+	        btSmaller.setOnAction(ev -> {
+				System.out.println("v");;
+	        });
+	        
+	        Button btBigger = new Button("^");
+	        btBigger.setOnAction(ev -> {
+				System.out.println("^");;
+	        });
+			
+	        Button btAdjustScale = new Button("Recalc Tree");
+	        btAdjustScale.setOnAction(ev -> {
+				recalcTree();
+	        });
+	        Button btShowDuplicates = new Button("Show Duplicates");
+	        btShowDuplicates.setOnAction(ev -> {
+				showDuplicates();
+	        });
+	        
+	        Button btScaleUp = new Button("+");
+	        btScaleUp.setOnAction(ev -> {
+				System.out.println("+");;
+	        });
+	        
+	        Button btScaleDown = new Button("-");
+	        btScaleDown.setOnAction(ev -> {
+				System.out.println("-");;
+	        });
+	        
+			lbTextID = new Label("0");
+			HBox buttons = new HBox(btPrevious, btNext, btSmaller, btBigger, btAdjustScale, btShowDuplicates, btScaleUp, btScaleDown, lbTextID);
+			buttons.setSpacing(5);
+	//		buttons.setPadding(new Insets(5));
+			
+	        slider = new Slider(0, 10000, 0);
+	        slider.setOrientation(Orientation.HORIZONTAL);
+	        slider.valueProperty().addListener(new ChangeListener<Number>() {
+	            public void changed(ObservableValue<? extends Number> ov,
+	                    Number old_val, Number new_val) {
+	            	double percent = new_val.doubleValue() * 0.0001;
+	            	System.out.println(percent);
+	            	// switchPage(page);
+	                }
+	            });
+	        slider.setPrefWidth(WIDTH-50);
+			VBox container2D = new VBox(buttons, slider);
+			container2D.setSpacing(15);
+			container2D.setPadding(new Insets(25));
+			container2D.setAlignment(Pos.CENTER);
+			
+			Group group2D = new Group(container2D);
+			subScene2D = new SubScene(group2D, WIDTH, 80);
+		}
 		
-		Button btSmaller = new Button("v");
-        btSmaller.setOnAction(ev -> {
-			System.out.println("v");;
-        });
-        
-        Button btBigger = new Button("^");
-        btBigger.setOnAction(ev -> {
-			System.out.println("^");;
-        });
-		
-        Button btAdjustScale = new Button("Recalc Tree");
-        btAdjustScale.setOnAction(ev -> {
-			recalcTree();
-        });
-        
-        Button btScaleUp = new Button("+");
-        btScaleUp.setOnAction(ev -> {
-			System.out.println("+");;
-        });
-        
-        Button btScaleDown = new Button("-");
-        btScaleDown.setOnAction(ev -> {
-			System.out.println("-");;
-        });
-        
-		lbTextID = new Label("0");
-		HBox buttons = new HBox(btPrevious, btNext, btSmaller, btBigger, btAdjustScale, btScaleUp, btScaleDown, lbTextID);
-		buttons.setSpacing(5);
-//		buttons.setPadding(new Insets(5));
-		
-        slider = new Slider(0, 10000, 0);
-        slider.setOrientation(Orientation.HORIZONTAL);
-        slider.valueProperty().addListener(new ChangeListener<Number>() {
-            public void changed(ObservableValue<? extends Number> ov,
-                    Number old_val, Number new_val) {
-            	double percent = new_val.doubleValue() * 0.0001;
-            	System.out.println(percent);
-            	// switchPage(page);
-                }
-            });
-        slider.setPrefWidth(WIDTH-50);
-		
-		VBox container2D = new VBox(buttons, slider);
-		container2D.setSpacing(15);
-		container2D.setPadding(new Insets(25));
-		container2D.setAlignment(Pos.CENTER);
-		
-		Group group2D = new Group(container2D);
-		SubScene subScene2D = new SubScene(group2D, WIDTH, 80);
 
 		
         tree = new TreeTableView<>();
@@ -556,11 +591,21 @@ public class FileDupeDetectorMain extends Application {
                 case '|':
 	                setText(text);
 	                setGraphic(newFileIcon(status));
-	                if (status != FOLDER_STATUS.UNIQUE) {
-	                	
+	                if (status == FOLDER_STATUS.UNIQUE) {
+	                    setTooltip(null);
 	                }
 	                else {
-		                tooltip.setText("reference files: "+text);
+	                	FileInfo fi = (FileInfo) getTableRow().getItem().guiInterface;
+	                	List<FileInfo> dupeFiles = QHashManager.getInstance().getFileInfosForHash(fi.getqHash());
+	                	StringBuffer tip = new StringBuffer();
+	                	tip.append("duplicates:");
+	                	for (FileInfo dupeFile:dupeFiles) {
+	                		if (dupeFile==fi) {
+	                			continue;
+	                		}
+	                		tip.append('\n').append(dupeFile.getPath().toString());
+	                	}
+		                tooltip.setText(tip.toString());
 	                    setTooltip(tooltip);
 	                }
                 	break;
@@ -647,17 +692,23 @@ public class FileDupeDetectorMain extends Application {
         tree.getColumns().addAll(Arrays.asList(nameCol, markCol, sizeCol, duplicateSizeCol, duplicateRatioSizeCol, lastModifiedCol, hashCol, duplicateCol));
         tree.setEditable(true);
         
-        ItemTreeNode rootNode = new ItemTreeNode(new Item(null, "root", 0, 0, 0, "", "", 0)); 
+        ItemTreeNode rootNode = new ItemTreeNode(this, new Item(this, null, "root", 0, 0, 0, "", "", 0)); 
         tree.setRoot(rootNode);
         tree.setShowRoot(false);
         List<BaseFolder> baseFolders = store.getBaseFolders();
         for (BaseFolder bf:baseFolders) {
-        	rootNode.getChildren().add(new ItemTreeNode(new Item(bf)));
+        	rootNode.getChildren().add(new ItemTreeNode(this, new Item(this, bf)));
         }
 		
 		tree.setPrefHeight(HEIGHT-300);
         
-		VBox vbox = new VBox(subScene2D, tree);
+		VBox vbox;
+		if (subScene2D != null) {
+			vbox = new VBox(subScene2D, tree);
+		}
+		else {
+			vbox = new VBox(tree);
+		}
 		Group groupALL = new Group(vbox);
 		Scene scene = new Scene(groupALL);
 		
@@ -672,11 +723,12 @@ public class FileDupeDetectorMain extends Application {
 	
 	// from: https://javanexus.com/blog/fix-resizable-canvas-javafx
 	private void resizeWindow() {
+		int heightOffset = secondaryWindow ? 40 : 120;
         double width = primary.getWidth();
         double height = primary.getHeight();
 
-        tree.setMaxHeight(height-120);
-        tree.setPrefHeight(height-120);
+        tree.setMaxHeight(height-heightOffset);
+        tree.setPrefHeight(height-heightOffset);
         tree.setMaxWidth(width-18);
         tree.setPrefWidth(width-18);
     }
@@ -701,6 +753,31 @@ public class FileDupeDetectorMain extends Application {
 		item.update();
 	}
 
+	private void showDuplicates() {
+		TreeItem<Item> selectedItem = tree.getSelectionModel().getSelectedItem();
+		if (selectedItem != null) {
+			GuiInterface guiInterface = selectedItem.getValue().guiInterface;
+			if (guiInterface.isFile()) {
+				FileInfo fi = (FileInfo) guiInterface;
+				Set<GuiInterface> filter = collectFilesByQHash(fi.getqHash());
+				new FileDupeDetectorMain(store, filter);
+			}
+		}
+	}
+
+	private Set<GuiInterface> collectFilesByQHash(String qHash) {
+		List<FileInfo> files = QHashManager.getInstance().getFileInfosForHash(qHash);
+		Set<GuiInterface> result = new HashSet<>();
+		for (FileInfo file:files) {
+			GuiInterface current = file;
+			while (current != null) {
+				result.add(current);
+				current = current.getParent();
+			}
+		}
+		return result;
+	}
+
 	public static void sleep(int ms) {
 		try {
 			Thread.sleep(ms);
@@ -710,7 +787,9 @@ public class FileDupeDetectorMain extends Application {
 	}
 
 	private synchronized void open() {
-		instance = null;
+		if (!secondaryWindow) {
+			instance = null;
+		}
 		try {
 			Platform.runLater(()->{
 				Stage prim = new Stage();
@@ -719,7 +798,9 @@ public class FileDupeDetectorMain extends Application {
 				} catch (Exception e) {
 					throw new RuntimeException(e.toString(), e);
 				}
-				instance = this; 
+				if (!secondaryWindow) {
+					instance = this;
+				}
 			});
 		}
 		catch (IllegalStateException tkEx) {
@@ -730,14 +811,18 @@ public class FileDupeDetectorMain extends Application {
 				} catch (Exception e) {
 					throw new RuntimeException(e.toString(), e);
 				}
-				instance = this; 
+				if (!secondaryWindow) {
+					instance = this;
+				}
 			});
 		}
-		while (instance == null) {
-			System.out.println("WAIT");
-			sleep(500);
+		if (!secondaryWindow) {
+			while (instance == null) {
+				System.out.println("WAIT");
+				sleep(500);
+			}
+			System.out.println("FOUND");
 		}
-		System.out.println("FOUND");		
 	}
 
 	public static void main(String[] args) throws Exception {
