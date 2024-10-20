@@ -38,6 +38,7 @@ import javafx.scene.SubScene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableCell;
 import javafx.scene.control.TreeTableColumn;
@@ -60,6 +61,7 @@ public class FileDupeDetectorMain extends Application {
 	private Label lbTextID;
 	private Slider slider;
 	private TreeTableView<Item> tree;	
+	private Tooltip tooltip;
 
 	enum FOLDER_STATUS {
 			UNIQUE, DUPLICATE, PARTIAL_DUPLICATE, SELECTED, HIDDEN
@@ -436,6 +438,8 @@ public class FileDupeDetectorMain extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		primary = primaryStage;
+		
+		tooltip = new Tooltip();
 
 		primary.setTitle("3D Output");
 		Button btPrevious = new Button("<");
@@ -514,6 +518,7 @@ public class FileDupeDetectorMain extends Application {
                 if (empty) {
 	                setText(null);
 	                setGraphic(null);
+                    setTooltip(null);
 	                return;
                 }
                 int len = item.length();
@@ -546,10 +551,18 @@ public class FileDupeDetectorMain extends Application {
                 case '/':
 	                setText(text);
 	                setGraphic(newFolderIcon(status));
+                    setTooltip(null);
                 	break;
                 case '|':
 	                setText(text);
 	                setGraphic(newFileIcon(status));
+	                if (status != FOLDER_STATUS.UNIQUE) {
+	                	
+	                }
+	                else {
+		                tooltip.setText("reference files: "+text);
+	                    setTooltip(tooltip);
+	                }
                 	break;
         		default:
         			throw new IllegalArgumentException("Unexpected type char: " + typeChar);

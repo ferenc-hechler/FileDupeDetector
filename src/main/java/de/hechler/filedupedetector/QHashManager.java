@@ -1,7 +1,9 @@
 package de.hechler.filedupedetector;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,17 +12,17 @@ public class QHashManager {
 	public static class DupeInfo {
 		String hash;
 		long filesize;
-		int numDupes;
-		Folder dupeRootFolder;
-		public DupeInfo(String hash, long filesize, Folder dupeRootFolder, int numDupes) {
+		List<FileInfo> dupeFiles;
+		FileInfo selectedFile;
+		public DupeInfo(String hash, long filesize, FileInfo fi) {
 			this.hash = hash;
 			this.filesize = filesize;
-			this.numDupes = numDupes;
-			this.dupeRootFolder = dupeRootFolder;
+			this.dupeFiles = new ArrayList<>();
+			this.dupeFiles.add(fi);
+			this.selectedFile = null;
 		}
 	}
 	public Map<String, DupeInfo> hash2dupeInfoMap;
-	public Map<String, FileInfo> hash2selectedFile;
 
 	private static QHashManager instance;
 	public static QHashManager getInstance() {
@@ -31,13 +33,11 @@ public class QHashManager {
 	}
 	private QHashManager() {
 		hash2dupeInfoMap = new HashMap<>();
-		hash2selectedFile = new HashMap<>();
 	}
 
 
 	public void collectHashDupes(ScanStore store) {
 		hash2dupeInfoMap = new HashMap<>();
-		hash2selectedFile = new HashMap<>();
 		final Set<String> hashValues = new HashSet<>(); 
 		final Set<String> duplicateHashValues = new HashSet<>();
 		store.visitFiles((file) -> {
@@ -46,15 +46,13 @@ public class QHashManager {
 			}
 		});
 		store.visitFiles((file) -> {
-			Folder folder = ((Folder) file.getParent());
 			if (duplicateHashValues.contains(file.getqHash())) {
 				DupeInfo di = hash2dupeInfoMap.get(file.getqHash());
 				if (di != null) {
-					di.dupeRootFolder = folder.getCommonParentFolder(di.dupeRootFolder);
-					di.numDupes += 1;
+					di.dupeFiles.add(file);
 				}
 				else {
-					di = new DupeInfo(file.getqHash(), file.getFilesize(), folder, 1);
+					di = new DupeInfo(file.getqHash(), file.getFilesize(), file);
 					hash2dupeInfoMap.put(file.getqHash(), di);
 				}
 			}
@@ -62,7 +60,7 @@ public class QHashManager {
 	}
 
 	public boolean isDupe(String qHash) {
-		return hash2dupeInfoMap.containsKey(qHash);
+		return getCountDupes(qHash)>0;
 	}
 	
 	public int getCountDupes(String qHash) {
@@ -70,32 +68,57 @@ public class QHashManager {
 		if (dupeInfo == null) {
 			return 0;
 		}
-		return dupeInfo.numDupes-1; 
+		return dupeInfo.dupeFiles.size()-1;
 	}
 	
 	public void unselectFileForHash(FileInfo fi) {
-		hash2selectedFile.remove(fi.getqHash(), fi);
+		DupeInfo dupeInfo = hash2dupeInfoMap.get(fi.getqHash());
+		if (dupeInfo == null) {
+			return;
+		}
+		if (dupeInfo.selectedFile == fi) {
+			dupeInfo.selectedFile = null;
+		}
 	}
 	public void selectFileForHash(FileInfo fi) {
-		hash2selectedFile.put(fi.getqHash(), fi);
+		DupeInfo dupeInfo = hash2dupeInfoMap.get(fi.getqHash());
+		if (dupeInfo == null) {
+			return;
+		}
+		dupeInfo.selectedFile = fi;
 	}
 	public void selectFileForHashIfUnselected(FileInfo fi) {
-		if (!hash2selectedFile.containsKey(fi.getqHash())) {
-			hash2selectedFile.put(fi.getqHash(), fi);
+		DupeInfo dupeInfo = hash2dupeInfoMap.get(fi.getqHash());
+		if (dupeInfo == null) {
+			return;
+		}
+		if (dupeInfo.selectedFile == null) {
+			dupeInfo.selectedFile = fi;
 		}
 	}
 	public FileInfo getSelectFileForHash(String qHash) {
-		return hash2selectedFile.get(qHash);
+		DupeInfo dupeInfo = hash2dupeInfoMap.get(qHash);
+		if (dupeInfo == null) {
+			return null;
+		}
+		return dupeInfo.selectedFile;
 	}
 	public boolean isSelectFileForHash(FileInfo fi) {
-		return hash2selectedFile.get(fi.getqHash()) == fi;
-	}
-	public boolean isHiddenByOtherFileForHash(FileInfo fi) {
-		FileInfo other = getSelectFileForHash(fi.getqHash());
-		if (other == null) {
+		DupeInfo dupeInfo = hash2dupeInfoMap.get(fi.getqHash());
+		if (dupeInfo == null) {
 			return false;
 		}
-		return other != fi;
+		return dupeInfo.selectedFile == fi;
+	}
+	public boolean isHiddenByOtherFileForHash(FileInfo fi) {
+		DupeInfo dupeInfo = hash2dupeInfoMap.get(fi.getqHash());
+		if (dupeInfo == null) {
+			return false;
+		}
+		if (dupeInfo.selectedFile == null) {
+			return false;
+		}
+		return dupeInfo.selectedFile != fi;
 	}
 
 	public void showStats() {
@@ -105,9 +128,9 @@ public class QHashManager {
 		long sumDuplicatesMem = 0;
 		for (DupeInfo di:hash2dupeInfoMap.values()) {
 			sumDifferentFiles += 1;
-			sumDuplicateFiles += (di.numDupes-1);
+			sumDuplicateFiles += (di.dupeFiles.size()-1);
 			sumDifferentMem += di.filesize;
-			sumDuplicatesMem += (di.filesize*(di.numDupes-1));
+			sumDuplicatesMem += (di.filesize*(di.dupeFiles.size()-1));
 		}
 		System.out.println("sum different files: "+sumDifferentFiles);
 		System.out.println("sum duplicate files: "+sumDuplicateFiles);
