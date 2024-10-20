@@ -6,9 +6,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -113,6 +118,111 @@ public class ScanStore implements GuiInterface {
 		}
 	}
 
+
+	/**
+	 * 
+	 * TYP;ID;FOLDERID;LAST_MODIFIED;CREATED;FILESIZE;?;SHA256
+	 * d;10000000;;/;;;;;		
+	 * d;10000004;10000000;00_INIT;;;;;
+	 * f;20000007;10000004;Autorun.inf;;21.02.2018 18:20:08;33;;3bb0818ea1211cc75f25e2ef4e788ba3973da161d8e50b015e24d818c45f14e5		
+	 * 
+	 * @param filename
+	 */
+	public void readCSV(String filename) {
+		Map<Integer, GuiInterface> idMap = new HashMap<>();
+		try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(filename), OUTPUT_ENCODING))) {
+			String line = in.readLine();
+			while (line != null) {
+				if (!line.isEmpty()) {
+					String[] columns = line.split(";", -1);
+//					if (columns.length != 9) {
+						List<String> cols = new ArrayList<>();
+						String quotedCol = null;
+						for (String column:columns) {
+							if (quotedCol != null) {
+								quotedCol = quotedCol + ";" + column;
+								if (quotedCol.endsWith("\"")) {
+									quotedCol = quotedCol.substring(1, quotedCol.length()-1).replace("\"\"", "\"");
+									cols.add(quotedCol);
+									quotedCol = null;
+								}
+							}
+							else if (!column.startsWith("\"")) {
+								cols.add(column);
+							}
+							else if (!column.endsWith("\"")) {
+								quotedCol = column;
+							}
+							else {
+								quotedCol = column;
+								quotedCol = quotedCol.substring(1, quotedCol.length()-1).replace("\"\"", "\"");
+								cols.add(column);
+							}
+						}
+						if (cols.size() != 9) {
+							throw new RuntimeException("invalid number of columns in '"+line+"'");
+						}
+						columns = (String[]) cols.toArray(new String[cols.size()]);
+//					}
+					String type = columns[0];
+					int id = Integer.parseInt(columns[1]);
+					int folderId = columns[2].isEmpty() ? -1 : Integer.parseInt(columns[2]);
+					String name = columns[3];
+					Date lastModified = parseDate(columns[4]);
+					Date creationTime = parseDate(columns[5]);
+					Date date = lastModified == null ? creationTime : lastModified;
+					long filesize = type.equals("f") ? Long.parseLong(columns[6]) : 0;
+					String unknown = columns[7];
+					String sha256 = columns[8];
+					if (!unknown.isEmpty()) {
+						throw new RuntimeException("found unknown value '"+unknown+"'");
+					}
+					//System.out.println(type+" "+id+" "+folderId+" "+name+" "+lastModified+" "+creationTime+" "+filesize+" "+unknown+" "+sha256);
+					if (folderId == -1) {
+						BaseFolder baseFolder = new BaseFolder(name);
+						baseFolders.add(baseFolder);
+						idMap.put(id, baseFolder);
+					}
+					else if (type.equals("d")) {
+						Folder parent = (Folder)idMap.get(folderId);
+						Folder folder = new Folder(parent, name);
+						parent.addChild(folder);
+						idMap.put(id, folder);
+					}
+					else if (type.equals("f")) {
+						Folder parent = (Folder)idMap.get(folderId);
+						FileInfo fi = new FileInfo(parent, name, filesize, date.getTime(), sha256);
+						parent.addChild(fi);
+						idMap.put(id, fi);
+					}
+					else {
+						throw new RuntimeException("unexpected type '"+type+"'");
+					}
+				}
+				line = in.readLine();
+			}
+			
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	
+	private final SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+
+	private Date parseDate(String dateStr) {
+		if (dateStr.isEmpty()) {
+			return null;
+		}
+		try {
+			return sdf.parse(dateStr);
+		} catch (ParseException e) {
+			throw new RuntimeException("Invalid CSV Date format '"+dateStr+"'");
+		}
+	}
+
+	
+	
 	/**
 	 * calculates number of files/folder/memory/duplicates. 
 	 */
@@ -205,4 +315,5 @@ public class ScanStore implements GuiInterface {
 		throw new UnsupportedOperationException("Root (ScanStore) can not be deleted.");
 	}
 
+	
 }

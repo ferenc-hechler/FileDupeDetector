@@ -86,6 +86,9 @@ public class BaseFolder extends Folder {
 		Folder parent = baseFolder;
 		Folder result = baseFolder;
 		for (String segment:segments) {
+			if (segment.isEmpty()) {
+				continue;
+			}
 			result = getOrCreateDirectChildFolder(parent, segment);
 			parent = result;
 		}

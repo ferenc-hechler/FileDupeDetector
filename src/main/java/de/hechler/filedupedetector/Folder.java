@@ -229,6 +229,15 @@ public class Folder implements GuiInterface {
 		return result;
 	}
 
+	public void addChild(GuiInterface child) {
+		if (child.isFolder()) {
+			childFolders.add((Folder) child);
+		}
+		else {
+			files.add((FileInfo) child);
+		}
+	}
+
 	@Override public List<GuiInterface> getChildFiles() {
 		List<GuiInterface> result = new ArrayList<>();
 		for (FileInfo file:files) {

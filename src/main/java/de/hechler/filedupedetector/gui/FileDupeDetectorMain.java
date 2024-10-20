@@ -136,9 +136,18 @@ public class FileDupeDetectorMain extends Application {
 //		store.write("./in/store-d_ebooks.out");
 //		System.out.println("write: "+sw.stopStr());
 		
-//		store.read("./in/store.out");
-		store.read("./in/store-d_ebooks.out");
+		store.read("./in/store.out");
+//		store.read("./in/store-d_ebooks.out");
+//		store.read("./in/store-depth3.out");
+//		store.read("./in/store-backup-full.out");
 		System.out.println("read: "+sw.stopStr());
+		
+//		store.readCSV("C:\\FILEINFOS\\backupDrive\\DEPTH3.csv");
+//		store.readCSV("C:\\FILEINFOS\\backupDrive\\files-G.-merged.csv");
+//		System.out.println("readCSV: "+sw.stopStr());
+//		store.write("./in/store-depth3.out");
+//		store.write("./in/store-backup-full.out");
+//		System.out.println("write: "+sw.stopStr());
 		
 		System.out.println("collect hash dupes");
 		QHashManager.getInstance().collectHashDupes(store);
