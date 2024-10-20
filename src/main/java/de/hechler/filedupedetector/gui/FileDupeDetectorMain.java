@@ -59,18 +59,23 @@ public class FileDupeDetectorMain extends Application {
 	private Stage primary;
 	private Label lbTextID;
 	private Slider slider;
+	private TreeTableView<Item> tree;	
 
 	enum FOLDER_STATUS {
-			UNIQUE, DUPLICATE, PARTIAL_DUPLICATE
+			UNIQUE, DUPLICATE, PARTIAL_DUPLICATE, SELECTED, HIDDEN
 	}
 	
     private final Image folderImage = new Image(getClass().getResourceAsStream("/img/folder-16.png"));
     private final Image folderRedImage = new Image(getClass().getResourceAsStream("/img/folder-red-16.png"));
     private final Image folderOrangeImage = new Image(getClass().getResourceAsStream("/img/folder-orange-16.png"));
+    private final Image folderGreenImage = new Image(getClass().getResourceAsStream("/img/folder-green-16.png"));
+    private final Image folderLightgrayImage = new Image(getClass().getResourceAsStream("/img/folder-lightgray-16.png"));
 
     private final Image fileImage = new Image(getClass().getResourceAsStream("/img/file-16.png"));
     private final Image fileRedImage = new Image(getClass().getResourceAsStream("/img/file-red-16.png"));
     private final Image fileOrangeImage = new Image(getClass().getResourceAsStream("/img/file-orange-16.png"));
+    private final Image fileGreenImage = new Image(getClass().getResourceAsStream("/img/file-green-16.png"));
+    private final Image fileLightgrayImage = new Image(getClass().getResourceAsStream("/img/file-lightgray-16.png"));
 
     private Node newFolderIcon(FOLDER_STATUS status) {
     	switch (status) {
@@ -82,6 +87,12 @@ public class FileDupeDetectorMain extends Application {
 		}
 		case PARTIAL_DUPLICATE: {
 	    	return new ImageView(folderOrangeImage);
+		}
+		case SELECTED: {
+	    	return new ImageView(folderGreenImage);
+		}
+		case HIDDEN: {
+	    	return new ImageView(folderLightgrayImage);
 		}
 		default:
 			throw new IllegalArgumentException("Unexpected value: " + status);
@@ -98,6 +109,12 @@ public class FileDupeDetectorMain extends Application {
 		}
 		case PARTIAL_DUPLICATE: {
 	    	return new ImageView(fileOrangeImage);
+		}
+		case SELECTED: {
+	    	return new ImageView(fileGreenImage);
+		}
+		case HIDDEN: {
+	    	return new ImageView(fileLightgrayImage);
 		}
 		default:
 			throw new IllegalArgumentException("Unexpected value: " + status);
@@ -119,8 +136,8 @@ public class FileDupeDetectorMain extends Application {
 //		store.write("./in/store-d_ebooks.out");
 //		System.out.println("write: "+sw.stopStr());
 		
-//		store.read("./in/store.out");
-		store.read("./in/store-d_ebooks.out");
+		store.read("./in/store.out");
+//		store.read("./in/store-d_ebooks.out");
 		System.out.println("read: "+sw.stopStr());
 		
 		System.out.println("collect hash dupes");
@@ -161,6 +178,10 @@ public class FileDupeDetectorMain extends Application {
             return false;
         }
 
+        public boolean childrenLoaded() {
+        	return childrenLoaded;
+        }
+        
         @Override
         public ObservableList<TreeItem<Item>> getChildren() {
             if (childrenLoaded) {
@@ -211,7 +232,20 @@ public class FileDupeDetectorMain extends Application {
         		FileInfo fi = (FileInfo) guiInterface;
         		char typeChar ='|';
         		int duplicates = QHashManager.getInstance().getCountDupes(fi.getqHash());
-        		char statusChar = duplicates == 0 ? 'U' : 'D';
+        		char statusChar;
+        		if (duplicates == 0) {
+        			statusChar = 'U';
+        		}
+        		else if (QHashManager.getInstance().isSelectFileForHash(fi)) {
+        			statusChar = 'S';
+        		}
+        		else if (QHashManager.getInstance().isHiddenByOtherFileForHash(fi)) {
+        			statusChar = 'H';
+        		}
+        		else {
+        			statusChar = 'D';
+        		}
+        		
                 setName(fi.getName()+typeChar+statusChar);
                 setSize(fi.getFilesize());
                 setDuplicateSize(fi.getSumInfo().getDuplicateMemory());
@@ -246,8 +280,73 @@ public class FileDupeDetectorMain extends Application {
             mark.addListener(bProp -> markChanged(((BooleanProperty)bProp).get()));
         }
 
+		public void update() {
+			if (guiInterface==null) {
+				return;
+			}
+        	if (guiInterface.isFile()) {
+        		FileInfo fi = (FileInfo) guiInterface;
+        		char typeChar ='|';
+        		int duplicates = QHashManager.getInstance().getCountDupes(fi.getqHash());
+        		char statusChar;
+        		if (duplicates == 0) {
+        			statusChar = 'U';
+        		}
+        		else if (QHashManager.getInstance().isSelectFileForHash(fi)) {
+        			statusChar = 'S';
+        		}
+        		else if (QHashManager.getInstance().isHiddenByOtherFileForHash(fi)) {
+        			statusChar = 'H';
+        		}
+        		else {
+        			statusChar = 'D';
+        		}
+        		
+                setName(fi.getName()+typeChar+statusChar);
+                setSize(fi.getFilesize());
+                setDuplicateSize(fi.getSumInfo().getDuplicateMemory());
+                setDuplicateRatioSize(fi.getSumInfo().getDuplicateRatioMemory());
+                setLastModified(long2datetimestring(fi.getLastModified()));
+                setHash(fi.getqHash());
+                setDuplicates(duplicates);
+        	}
+        	else {
+        		Folder folder = (Folder) guiInterface;
+        		char typeChar ='/';
+        		SumInfo sumInfo = folder.getSumInfo();
+        		char statusChar = 'U';
+        		if (sumInfo.getDuplicateMemory()>0) {
+            		if (sumInfo.getDuplicateMemory()==sumInfo.getTotalMemory()) {
+            			statusChar = 'D';
+            		}
+            		else {
+            			statusChar = 'P';
+            		}
+        		}
+                setName(folder.getName()+typeChar+statusChar);
+                setSize(sumInfo.getTotalMemory());
+                setDuplicateSize(sumInfo.getDuplicateMemory());
+                setDuplicateRatioSize(sumInfo.getDuplicateRatioMemory());
+                setLastModified(sumInfo.getLastModifiedString());
+                setHash("folders: #"+sumInfo.getNumFolders()+", files: #"+sumInfo.getNumFiles());
+                setDuplicates(0);
+        	}
+		}
+
+
+        
         private void markChanged(boolean newValue) {
-        	System.out.println(getName()+" changed mark "+newValue);
+        	System.out.println(getName()+" selection "+newValue);
+    		if (guiInterface.isFile()) {
+    			FileInfo fi = (FileInfo)guiInterface;
+        		String qHash = fi.getqHash();
+	        	if (newValue) {
+	        		QHashManager.getInstance().selectFileForHash(fi);
+	        	}
+	        	else {
+	        		QHashManager.getInstance().unselectFileForHash(fi);
+	        	}
+        	}
 		}
 
 		public Item(GuiInterface guiInterface, String name, long size, long duplicateSize, long duplicateRatioSize, String lastModified, String hash, int duplicates) {
@@ -375,9 +474,9 @@ public class FileDupeDetectorMain extends Application {
 			System.out.println("^");;
         });
 		
-        Button btAdjustScale = new Button("Adjust Scale");
+        Button btAdjustScale = new Button("Recalc Tree");
         btAdjustScale.setOnAction(ev -> {
-			System.out.println("Adjust Scale");;
+			recalcTree();
         });
         
         Button btScaleUp = new Button("+");
@@ -416,7 +515,7 @@ public class FileDupeDetectorMain extends Application {
 		SubScene subScene2D = new SubScene(group2D, WIDTH, 80);
 
 		
-        TreeTableView<Item> tree = new TreeTableView<>();
+        tree = new TreeTableView<>();
 
         TreeTableColumn<Item, String> nameCol = new TreeTableColumn<>("Name");
         nameCol.setCellValueFactory(cellData -> cellData.getValue().getValue().nameProperty());
@@ -449,6 +548,12 @@ public class FileDupeDetectorMain extends Application {
                 	break;
                 case 'P':
                 	status = FOLDER_STATUS.PARTIAL_DUPLICATE;
+                	break;
+                case 'S':
+                	status = FOLDER_STATUS.SELECTED;
+                	break;
+                case 'H':
+                	status = FOLDER_STATUS.HIDDEN;
                 	break;
         		default:
         			throw new IllegalArgumentException("Unexpected status char: " + statusChar);
@@ -564,6 +669,26 @@ public class FileDupeDetectorMain extends Application {
 	}
 	
     
+	private void recalcTree() {
+		store.updateSumInfoFromChildren();
+		recursiveRecalcTree(tree.getRoot());
+	}
+
+	private void recursiveRecalcTree(TreeItem<Item> treeItem) {
+		recalcTreeItem(treeItem);
+		ItemTreeNode node = (ItemTreeNode) treeItem;
+		if (node.childrenLoaded) {
+			for (TreeItem<Item> ti:node.getChildren()) {
+				recursiveRecalcTree(ti);
+			}
+		}
+	}
+
+	private void recalcTreeItem(TreeItem<Item> treeItem) {
+		Item item = treeItem.getValue();
+		item.update();
+	}
+
 	public static void sleep(int ms) {
 		try {
 			Thread.sleep(ms);

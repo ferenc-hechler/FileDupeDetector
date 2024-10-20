@@ -114,7 +114,7 @@ public class ScanStore implements GuiInterface {
 	}
 
 	/**
-	 * recalculates number of files/folder/memory/duplicates. 
+	 * calculates number of files/folder/memory/duplicates. 
 	 */
 	public SumInfo calcSumInfoFromChildren() {
 		QHashManager.getInstance().clear();
@@ -127,6 +127,16 @@ public class ScanStore implements GuiInterface {
 		return sumInfo;
 	}
 
+	/**
+	 * recalculates number of files/folder/memory/duplicates. 
+	 */
+	public SumInfo updateSumInfoFromChildren() {
+		sumInfo = new SumInfo();
+		for (BaseFolder bf:baseFolders) {
+			sumInfo.add(bf.calcSumInfoFromChildren());
+		}
+		return sumInfo;
+	}
 
 	public List<BaseFolder> getBaseFolders() {
 		return baseFolders;
