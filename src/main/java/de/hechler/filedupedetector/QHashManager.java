@@ -79,6 +79,11 @@ public class QHashManager {
 	public void selectFileForHash(FileInfo fi) {
 		hash2selectedFile.put(fi.getqHash(), fi);
 	}
+	public void selectFileForHashIfUnselected(FileInfo fi) {
+		if (!hash2selectedFile.containsKey(fi.getqHash())) {
+			hash2selectedFile.put(fi.getqHash(), fi);
+		}
+	}
 	public FileInfo getSelectFileForHash(String qHash) {
 		return hash2selectedFile.get(qHash);
 	}

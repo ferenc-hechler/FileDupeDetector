@@ -302,7 +302,6 @@ public class FileDupeDetectorMain extends Application {
         	System.out.println(getName()+" selection "+newValue);
     		if (guiInterface.isFile()) {
     			FileInfo fi = (FileInfo)guiInterface;
-        		String qHash = fi.getqHash();
 	        	if (newValue) {
 	        		QHashManager.getInstance().selectFileForHash(fi);
 	        	}
@@ -310,6 +309,18 @@ public class FileDupeDetectorMain extends Application {
 	        		QHashManager.getInstance().unselectFileForHash(fi);
 	        	}
         	}
+    		if (guiInterface.isFolder()) {
+    			Folder folder = (Folder)guiInterface;
+    			folder.visitAllFiles(fi -> {
+    	        	if (newValue) {
+    	        		QHashManager.getInstance().selectFileForHashIfUnselected(fi);
+    	        	}
+    	        	else {
+    	        		QHashManager.getInstance().unselectFileForHash(fi);
+    	        	}
+    			});
+        	}
+        	instance.recalcTree();
 		}
 
 		public Item(GuiInterface guiInterface, String name, long size, long duplicateSize, long duplicateRatioSize, String lastModified, String hash, int duplicates) {
